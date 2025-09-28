@@ -1,16 +1,10 @@
 from django.db import models
 
-# Create your models here.
-class TaskList(models.Model):
-    task_name = models.CharField(max_length=100)
+class Event(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
 
     def __str__(self):
-        return self.task_name
-
-class Task(models.Model):
-    task_list = models.ForeignKey(TaskList, on_delete=models.CASCADE)
-    text = models.CharField(max_length=300)
-    complete = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.text
+        return self.title
