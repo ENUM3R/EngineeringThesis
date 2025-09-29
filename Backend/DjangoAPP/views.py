@@ -1,8 +1,8 @@
 from rest_framework import viewsets
-from .models import Event
+from .models import Task
 from .serializers import EventSerializer
 # Create your views here.
 
 class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.all()
+    queryset = Task.objects.all()
     serializer_class = EventSerializer

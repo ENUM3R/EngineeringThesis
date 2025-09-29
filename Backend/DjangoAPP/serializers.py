@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import Event
+from .models import Task
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Event
+        model = Task
         fields = '__all__'
