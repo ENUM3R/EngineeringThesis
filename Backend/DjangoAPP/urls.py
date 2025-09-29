@@ -1,9 +1,13 @@
 from django.contrib import admin
-from django.urls import path
-from . import views
-from django.urls import include, path
+from django.urls import path, include
+from .views import TaskViewSet, UserViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'tasks', TaskViewSet)
+router.register(r'users', UserViewSet)
+
 
 urlpatterns = [
-    #path('admin/', admin.site.urls),
-    path('<int:id>', views.hello_view, name='hello_view'),
+    path('',include(router.urls)),
 ]

@@ -19,7 +19,7 @@ export default function CalendarPage() {
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:8000/api/events/')
+    axios.get('http://127.0.0.1:8000/api/task/')
       .then(res => {
         const formattedEvents = res.data.map(event => ({
           title: event.title,

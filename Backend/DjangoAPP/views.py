@@ -1,8 +1,12 @@
 from rest_framework import viewsets
-from .models import Task
-from .serializers import EventSerializer
+from .models import Task, User
+from .serializers import TaskSerializer, UserSerializer
 # Create your views here.
 
-class EventViewSet(viewsets.ModelViewSet):
+class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
-    serializer_class = EventSerializer
+    serializer_class = TaskSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer

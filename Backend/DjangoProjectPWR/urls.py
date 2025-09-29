@@ -16,13 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework import routers
-from DjangoAPP.views import EventViewSet
-
-router = routers.DefaultRouter()
-router.register(r'events', EventViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include(router.urls)),
+    path('api/', include('DjangoAPP.urls')),
 ]
