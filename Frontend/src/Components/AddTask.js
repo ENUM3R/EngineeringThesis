@@ -1,20 +1,20 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 
-export default function TaskForm({ onSubmit, onCancel, defaultValues }) {
+export default function AddTask({ onSubmit, onCancel, defaultValues }) {
     const [title, setTitle] = useState(defaultValues?.title || "");
     const [description, setDescription] = useState(defaultValues?.description || "");
     const [priority, setPriority] = useState(defaultValues?.priority || 1);
     const [status, setStatus] = useState(defaultValues?.status || "pending");
     const [end_time, setEndTime] = useState(
-        defaultValues?.end_time
+        defaultValues?.end_time 
             ? new Date(defaultValues.end_time).toISOString().slice(0, 10)
             : ""
     );
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        onSubmit({ title, description, priority, status, end_time }); // fixed end_time
+        onSubmit({ title, description, priority, status, end_time });
     };
 
     return (
@@ -127,8 +127,7 @@ export default function TaskForm({ onSubmit, onCancel, defaultValues }) {
     );
 }
 
-// ✅ Add PropTypes validation
-TaskForm.propTypes = {
+AddTask.propTypes = {
     onSubmit: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
     defaultValues: PropTypes.shape({

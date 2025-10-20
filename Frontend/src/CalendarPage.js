@@ -6,7 +6,9 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 
 import { QuarterView } from "./Components/QuarterView";
 import { CustomToolbar } from "./Components/CustomToolbar";
-import TaskForm from "./Components/TaskForm";
+import AddTask from "./Components/AddTask";
+import DeleteTask from "./Components/DeleteTask";
+import EditTask from "./Components/EditTask";
 
 const locales = {
     "en-US": require("date-fns/locale/en-US"),
@@ -24,8 +26,10 @@ export default function CalendarPage() {
     const [theme, setTheme] = useState("dark");
     const [events, setEvents] = useState([]);
     const [currentView, setCurrentView] = useState(Views.MONTH);
-    const [showTaskForm, setShowTaskForm] = useState(false);
+    const [taskToAdd, setAddTask] = useState(false);
     const [selectedDate, setSelectedDate] = useState(null);
+    const [taskToDelete, setTaskToDelete] = useState(null);
+    const [taskToEdit, setTaskToEdit] = useState(null);
 
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
@@ -50,14 +54,15 @@ export default function CalendarPage() {
 
     const handleSelectSlot = ({ start, end }) => {
         setSelectedDate({ start, end });
-        setShowTaskForm(true);
+        setAddTask(true);
     };
 
     const handleSelectEvent = (event) => {
-        if (window.confirm(`Delete task: ${event.title}?`)) {
-            axios
-                .delete(`http://127.0.0.1:8000/api/tasks/${event.id}/`)
-                .then(() => fetchEvents());
+        const task = events.find(e => e.id === event.id || e.id === event.task_id);
+        if (task) {
+            setTaskToDelete(task);
+        } else {
+            console.error("Task not found for event:", event);
         }
     };
     const handleAddTask = (taskData) => {
@@ -70,10 +75,43 @@ export default function CalendarPage() {
             })
             .then(() => {
                 fetchEvents();
-                setShowTaskForm(false);
+                setAddTask(false);
             });
     };
-    const handleCancelTask = () => setShowTaskForm(false);
+    const handleCancelTask = () => setAddTask(false);
+
+    const handleRightClickEvent = (event, e) => {
+        e.preventDefault();
+        setTaskToDelete(event); 
+    };
+
+    const handleDeleteTask = (task) => {
+        if (!task || !task.id) return;
+        axios
+            .delete(`http://127.0.0.1:8000/api/tasks/${task.id}/`)
+            .then(() => {
+                fetchEvents();
+                setTaskToDelete(null);
+            })
+            .catch(err => console.error(err));
+    }
+    const handleCancelDelete = () => {
+        setTaskToDelete(null);
+    }
+
+    const handleEditTask = (task) => {
+        setTaskToEdit(task);
+    };
+    const handleSaveTask = (updatedTask) => {
+        axios.put(`http://127.0.0.1:8000/api/tasks/${updatedTask.id}/`, updatedTask)
+            .then(() => {
+                fetchEvents();
+                setTaskToEdit(null);
+            })
+            .catch(err => console.error(err));
+    };
+
+    const handleCancelEdit = () => setTaskToEdit(null);
 
     return (
         <div
@@ -116,6 +154,7 @@ export default function CalendarPage() {
                 selectable
                 onSelectSlot={handleSelectSlot}
                 onSelectEvent={handleSelectEvent}
+                onEventContextMenu={handleRightClickEvent}
                 style={{
                     height: 550,
                     backgroundColor: theme === "dark" ? "#1e1e1e" : "#fff",
@@ -143,8 +182,15 @@ export default function CalendarPage() {
                 }}
                 {...(currentView === "quarter" ? { quarterViewTheme: theme } : {})}
             />
-            {showTaskForm && (
-                <TaskForm onSubmit={handleAddTask} onCancel={handleCancelTask} />
+            {taskToAdd && (
+                <AddTask onSubmit={handleAddTask} onCancel={handleCancelTask} />
+            )}
+            {taskToDelete && (
+                <DeleteTask task={taskToDelete} onDelete={handleDeleteTask} onCancel={handleCancelDelete}
+                /> 
+            )}
+            {taskToEdit && (
+                <EditTask task={taskToEdit} onSubmit={handleSaveTask} onCancel={handleCancelEdit} />
             )}
         </div>
     );
