@@ -9,6 +9,7 @@ import { CustomToolbar } from "./Components/CustomToolbar";
 import AddTask from "./Components/AddTask";
 import DeleteTask from "./Components/DeleteTask";
 import EditTask from "./Components/EditTask";
+import TaskOptions from "./Components/TaskOptions";
 
 const locales = {
     "en-US": require("date-fns/locale/en-US"),
@@ -30,6 +31,8 @@ export default function CalendarPage() {
     const [selectedDate, setSelectedDate] = useState(null);
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [taskToEdit, setTaskToEdit] = useState(null);
+    const [dayOptionsPos, setDayOptionsPos] = useState(null);
+    const [dayOptionsDate, setDayOptionsDate] = useState(null); 
 
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
@@ -38,6 +41,12 @@ export default function CalendarPage() {
     useEffect(() => {
         fetchEvents();
     }, []);
+
+    useEffect(() => {
+        const handleOutsideClick = () => setDayOptionsPos(null);
+        if (dayOptionsPos) document.addEventListener("click", handleOutsideClick);
+        return () => document.removeEventListener("click", handleOutsideClick);
+    }, [dayOptionsPos]);
 
     const fetchEvents = () => {
         axios.get("http://127.0.0.1:8000/api/tasks/").then((res) => {
@@ -52,10 +61,14 @@ export default function CalendarPage() {
         });
     };
 
-    const handleSelectSlot = ({ start, end }) => {
-        setSelectedDate({ start, end });
-        setAddTask(true);
+    const handleSelectSlot = (slotInfo) => {
+        const defaultX = window.innerWidth / 2 - 75;
+        const defaultY = window.innerHeight / 2 - 100;
+
+        setDayOptionsPos({ x: defaultX, y: defaultY });
+        setDayOptionsDate({ start: slotInfo.start, end: slotInfo.end });
     };
+
 
     const handleSelectEvent = (event) => {
         const task = events.find(e => e.id === event.id || e.id === event.task_id);
@@ -152,7 +165,7 @@ export default function CalendarPage() {
                 startAccessor="start"
                 endAccessor="end"
                 selectable
-                onSelectSlot={handleSelectSlot}
+                onSelectSlot={(slotInfo, e) => handleSelectSlot(slotInfo, e)}
                 onSelectEvent={handleSelectEvent}
                 onEventContextMenu={handleRightClickEvent}
                 style={{
@@ -182,16 +195,57 @@ export default function CalendarPage() {
                 }}
                 {...(currentView === "quarter" ? { quarterViewTheme: theme } : {})}
             />
+            {dayOptionsPos && (
+                <TaskOptions
+                    position={dayOptionsPos}
+                    onAdd={() => {
+                        setAddTask(true);
+                        setSelectedDate(dayOptionsDate);
+                        setDayOptionsPos(null);
+                    }}
+                    onDelete={() => {
+                        const tasksForDay = events.filter(
+                            (e) => e.start.toDateString() === dayOptionsDate.start.toDateString()
+                        );
+                        if (tasksForDay.length > 0) {
+                            setTaskToDelete(tasksForDay[0]);
+                            setDayOptionsPos(null);
+                        }
+                    }}
+                    onEdit={() => {
+                        const tasksForDay = events.filter(
+                            (e) => e.start.toDateString() === dayOptionsDate.start.toDateString()
+                        );
+                        if (tasksForDay.length > 0) {
+                            setTaskToEdit(tasksForDay[0]);
+                            setDayOptionsPos(null);
+                        }
+                    }}
+                    onCancel={() => setDayOptionsPos(null)}
+                />
+            )}
             {taskToAdd && (
-                <AddTask onSubmit={handleAddTask} onCancel={handleCancelTask} />
+                <AddTask
+                    onSubmit={handleAddTask}
+                    onCancel={handleCancelTask}
+                    defaultValues={{}}
+                />
             )}
             {taskToDelete && (
-                <DeleteTask task={taskToDelete} onDelete={handleDeleteTask} onCancel={handleCancelDelete}
-                /> 
+                <DeleteTask
+                    task={taskToDelete}
+                    onDelete={handleDeleteTask}
+                    onCancel={handleCancelDelete}
+                />
             )}
             {taskToEdit && (
-                <EditTask task={taskToEdit} onSubmit={handleSaveTask} onCancel={handleCancelEdit} />
+                <EditTask
+                    task={taskToEdit}
+                    onSubmit={handleSaveTask}
+                    onCancel={handleCancelEdit}
+                />
             )}
+
         </div>
     );
 }
