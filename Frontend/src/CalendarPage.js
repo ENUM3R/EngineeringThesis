@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
-import axios from "axios";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
+import useTasks from "./Hooks/useTasks";
 import { QuarterView } from "./Components/QuarterView";
 import { CustomToolbar } from "./Components/CustomToolbar";
 import AddTask from "./Components/AddTask";
@@ -26,8 +26,8 @@ const localizer = dateFnsLocalizer({
 
 export default function CalendarPage() {
     const [theme, setTheme] = useState("dark");
-    const [events, setEvents] = useState([]);
     const [currentView, setCurrentView] = useState(Views.MONTH);
+
     const [taskToAdd, setAddTask] = useState(false);
     const [selectedDate, setSelectedDate] = useState(null);
     const [taskToDelete, setTaskToDelete] = useState(null);
@@ -37,14 +37,11 @@ export default function CalendarPage() {
     const [taskListForDay, setTaskListForDay] = useState(null);
     const [taskActionType, setTaskActionType] = useState(null);
 
+    const {events, fetchEvents, addTask, deleteTask, editTask} = useTasks();
 
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
     }, [theme]);
-
-    useEffect(() => {
-        fetchEvents();
-    }, []);
 
     useEffect(() => {
         const handleOutsideClick = () => setDayOptionsPos(null);
@@ -52,85 +49,17 @@ export default function CalendarPage() {
         return () => document.removeEventListener("click", handleOutsideClick);
     }, [dayOptionsPos]);
 
-    const fetchEvents = () => {
-        axios.get("http://127.0.0.1:8000/api/tasks/").then((res) => {
-            const formattedEvents = res.data.map((event) => ({
-                id: event.task_id,
-                title: event.title,
-                start: new Date(event.start_time),
-                end: new Date(event.end_time),
-                end_raw: event.end_time,
-                priority: Number(event.priority) || 0,
-                status: event.status,
-            }));
-            setEvents(formattedEvents);
-        });
-    };
-
     const handleSelectSlot = (slotInfo) => {
         const defaultX = window.innerWidth / 2 - 75;
         const defaultY = window.innerHeight / 2 - 100;
-
         setDayOptionsPos({ x: defaultX, y: defaultY });
         setDayOptionsDate({ start: slotInfo.start, end: slotInfo.end });
     };
 
-
     const handleSelectEvent = (event) => {
         const task = events.find(e => e.id === event.id || e.id === event.task_id);
-        if (task) {
-            setTaskToDelete(task);
-        } else {
-            console.error("Task not found for event:", event);
-        }
+        if (task) setTaskToDelete(task);
     };
-    const handleAddTask = (taskData) => {
-        axios
-            .post("http://127.0.0.1:8000/api/tasks/", {
-                ...taskData,
-                start_time: selectedDate.start,
-                end_time: taskData.end_time || selectedDate.end,
-                points: 0,
-            })
-            .then(() => {
-                fetchEvents();
-                setAddTask(false);
-            });
-    };
-    const handleCancelTask = () => setAddTask(false);
-
-    const handleRightClickEvent = (event, e) => {
-        e.preventDefault();
-        setTaskToDelete(event); 
-    };
-
-    const handleDeleteTask = (task) => {
-        if (!task || !task.id) return;
-        axios
-            .delete(`http://127.0.0.1:8000/api/tasks/${task.id}/`)
-            .then(() => {
-                fetchEvents();
-                setTaskToDelete(null);
-            })
-            .catch(err => console.error(err));
-    }
-    const handleCancelDelete = () => {
-        setTaskToDelete(null);
-    }
-
-    const handleEditTask = (task) => {
-        setTaskToEdit(task);
-    };
-    const handleSaveTask = (updatedTask) => {
-        axios.put(`http://127.0.0.1:8000/api/tasks/${updatedTask.id}/`, updatedTask)
-            .then(() => {
-                fetchEvents();
-                setTaskToEdit(null);
-            })
-            .catch(err => console.error(err));
-    };
-
-    const handleCancelEdit = () => setTaskToEdit(null);
 
     return (
         <div
@@ -144,13 +73,7 @@ export default function CalendarPage() {
                 position: "relative",
             }}
         >
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginBottom: "10px",
-                }}
-            >
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
                 <button
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                     style={{
@@ -165,39 +88,20 @@ export default function CalendarPage() {
           Switch to {theme === "dark" ? "Light" : "Dark"} Mode
                 </button>
             </div>
+
             <Calendar
                 localizer={localizer}
                 events={events}
                 startAccessor="start"
                 endAccessor="end"
                 selectable
-                onSelectSlot={(slotInfo, e) => handleSelectSlot(slotInfo, e)}
+                onSelectSlot={handleSelectSlot}
                 onSelectEvent={handleSelectEvent}
-                onEventContextMenu={handleRightClickEvent}
                 style={{
                     height: 550,
                     backgroundColor: theme === "dark" ? "#1e1e1e" : "#fff",
                     color: theme === "dark" ? "#fff" : "#000",
                     borderRadius: "8px",
-                }}
-                eventPropGetter={(event) => {
-                    let backgroundColor = getComputedStyle(document.documentElement)
-                        .getPropertyValue("--event-color");
-                    if (event.status === "pending") backgroundColor = "#fda80bb6";
-                    if (event.status === "in progress") backgroundColor = "#b007ffff";
-                    if (event.status === "completed") backgroundColor = "#14fff3ff";
-                    if (event.status === "overdue") backgroundColor = "#f70073";
-                    if (event.status === "done") backgroundColor = "#00ff22";
-                    return {
-                        style: {
-                            backgroundColor,
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "4px",
-                            padding: "2px 6px",
-                            fontSize: "0.9em",
-                        },
-                    };
                 }}
                 views={{
                     month: true,
@@ -208,18 +112,35 @@ export default function CalendarPage() {
                 }}
                 defaultView={Views.MONTH}
                 view={currentView}
-                onView={(view) => setCurrentView(view)}
+                onView={setCurrentView}
                 components={{
                     toolbar: (props) => (
-                        <CustomToolbar
-                            {...props}
-                            currentView={currentView}
-                            setCurrentView={setCurrentView}
-                        />
+                        <CustomToolbar {...props} currentView={currentView} setCurrentView={setCurrentView} />
                     ),
                 }}
-                {...(currentView === "quarter" ? { quarterViewTheme: theme } : {})}
+                eventPropGetter={(event) => {
+                    let backgroundColor = "#777";
+                    switch (event.status){
+                    case "pending":
+                        backgroundColor = "#fda80bb6";
+                        break;
+                    case "in progress":
+                        backgroundColor = "#b007ffff";
+                        break;
+                    case "completed":
+                        backgroundColor = "#14fff3ff";
+                        break;
+                    case "overdue":
+                        backgroundColor = "#f70073";
+                        break;
+                    case "done":
+                        backgroundColor = "#00ff22";
+                        break;
+                    }
+                    return { style: { backgroundColor, color: "#fff" } };
+                }}
             />
+
             {dayOptionsPos && (
                 <TaskOptions
                     position={dayOptionsPos}
@@ -232,9 +153,8 @@ export default function CalendarPage() {
                         const tasksForDay = events.filter(
                             (e) => e.start.toDateString() === dayOptionsDate.start.toDateString()
                         );
-                        if (tasksForDay.length === 1) {
-                            setTaskToDelete(tasksForDay[0]);
-                        } else if (tasksForDay.length > 1) {
+                        if (tasksForDay.length === 1) setTaskToDelete(tasksForDay[0]);
+                        else if (tasksForDay.length > 1) {
                             setTaskListForDay(tasksForDay);
                             setTaskActionType("delete");
                         }
@@ -244,9 +164,8 @@ export default function CalendarPage() {
                         const tasksForDay = events.filter(
                             (e) => e.start.toDateString() === dayOptionsDate.start.toDateString()
                         );
-                        if (tasksForDay.length === 1) {
-                            setTaskToEdit(tasksForDay[0]);
-                        } else if (tasksForDay.length > 1) {
+                        if (tasksForDay.length === 1) setTaskToEdit(tasksForDay[0]);
+                        else if (tasksForDay.length > 1) {
                             setTaskListForDay(tasksForDay);
                             setTaskActionType("edit");
                         }
@@ -255,25 +174,35 @@ export default function CalendarPage() {
                     onCancel={() => setDayOptionsPos(null)}
                 />
             )}
+
             {taskToAdd && (
                 <AddTask
-                    onSubmit={handleAddTask}
-                    onCancel={handleCancelTask}
+                    onSubmit={async (data) => {
+                        await addTask(data, selectedDate);
+                        setAddTask(false);
+                    }}
+                    onCancel={() => setAddTask(false)}
                     defaultValues={{}}
                 />
             )}
             {taskToDelete && (
                 <DeleteTask
                     task={taskToDelete}
-                    onDelete={handleDeleteTask}
-                    onCancel={handleCancelDelete}
+                    onDelete={async () => {
+                        await deleteTask(taskToDelete.id);
+                        setTaskToDelete(null);
+                    }}
+                    onCancel={() => setTaskToDelete(null)}
                 />
             )}
             {taskToEdit && (
                 <EditTask
                     task={taskToEdit}
-                    onSubmit={handleSaveTask}
-                    onCancel={handleCancelEdit}
+                    onSubmit={async (data) => {
+                        await editTask(data);
+                        setTaskToEdit(null);
+                    }}
+                    onCancel={() => setTaskToEdit(null)}
                 />
             )}
             {taskListForDay && (

@@ -10,7 +10,25 @@ export default function EditTask({ task, onSubmit, onCancel }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit({ ...task, title, description, priority, status, end_time: endTime });
+
+        const formattedStart = task.start
+            ? new Date(task.start).toISOString()
+            : new Date().toISOString();
+
+        const formattedEnd = endTime
+            ? (() => { const d = new Date(endTime); d.setHours(23, 59, 59); return d.toISOString(); })()
+            : new Date().toISOString();
+
+        onSubmit({
+            task_id: task.task_id,
+            title,
+            description,
+            priority: Number(priority),
+            points: task.points || 0,
+            status,
+            start_time: formattedStart,
+            end_time: formattedEnd,
+        });
     };
 
     return (  
@@ -64,13 +82,16 @@ export default function EditTask({ task, onSubmit, onCancel }) {
 
 EditTask.propTypes = {
     task: PropTypes.shape({
-        id: PropTypes.number.isRequired,
+        task_id: PropTypes.number.isRequired,
         title: PropTypes.string.isRequired,
         description: PropTypes.string,
         priority: PropTypes.number,
         status: PropTypes.string,
+        points: PropTypes.number,
         end: PropTypes.string,
-    }),
+        start: PropTypes.string,
+    }).isRequired,
     onSubmit: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
 };
+
