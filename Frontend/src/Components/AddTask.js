@@ -70,7 +70,7 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
                     <br />
                     <input
                         type="date"
-                        value={end_time} // fixed
+                        value={end_time}
                         onChange={(e) => setEndTime(e.target.value)}
                         style={{ width: "100%" }}
                     />
@@ -87,6 +87,7 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
                         <option value="in progress">In Progress</option>
                         <option value="done">Done</option>
                         <option value="abandoned">Abandoned</option>
+                        <option value="overdue">Overdue</option>
                     </select>
                 </div>
                 <div

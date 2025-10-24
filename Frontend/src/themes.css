@@ -6,6 +6,7 @@
   --accent: #0073f7;
   --toolbar-bg: #e0e0e0;
   --border-color: #ccc;
+  --event-color: #fdf900ff;  
 }
 
 /* === Dark Theme === */
@@ -13,9 +14,10 @@
   --bg-main: #2b2b2b;
   --bg-secondary: #3a3a3a;
   --text-color: #f5f5f5;
-  --accent: #0073f7;
+  --accent: #4adbff;
   --toolbar-bg: #333;
   --border-color: #555;
+  --event-color: #fdf900ff;
 }
 
 /* === Apply variables globally === */
