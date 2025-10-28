@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "./themes.css"
 
 import useTasks from "./Hooks/useTasks";
 import { QuarterView } from "./Components/QuarterView";
@@ -63,11 +64,10 @@ export default function CalendarPage() {
 
     return (
         <div
+            className="calendar-container"
             style={{
                 height: 600,
                 margin: "50px",
-                backgroundColor: theme === "dark" ? "#1e1e1e" : "#f9f9f9",
-                color: theme === "dark" ? "#fff" : "#000",
                 padding: "10px",
                 borderRadius: "8px",
                 position: "relative",
@@ -99,8 +99,6 @@ export default function CalendarPage() {
                 onSelectEvent={handleSelectEvent}
                 style={{
                     height: 550,
-                    backgroundColor: theme === "dark" ? "#1e1e1e" : "#fff",
-                    color: theme === "dark" ? "#fff" : "#000",
                     borderRadius: "8px",
                 }}
                 views={{

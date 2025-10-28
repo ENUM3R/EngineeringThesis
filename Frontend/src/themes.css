@@ -20,6 +20,15 @@
   --event-color: #fdf900ff;
 }
 
+.calendar-container {
+  background-color: var(--bg-main);
+  color: var(--text-color);
+  box-shadow: 0 0 10px var(--border-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+body, .calendar-container, .rbc-calendar {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
 /* === Apply variables globally === */
 body {
   background-color: var(--bg-main);
