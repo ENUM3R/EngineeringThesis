@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import CalendarPage from "./CalendarPage";
 import LoginPage from "./Login/LoginPage";
-import { getAccessToken } from "./Hooks/useAuth";
 import PropTypes from "prop-types";
+import { useAuth } from "./Hooks/useAuth";
 
 const PrivateRoute = ({ children }) => {
+    const { getAccessToken } = useAuth();
     const token = getAccessToken();
     return token ? children : <Navigate to="/login" replace />;
 };

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import TaskOptions from "./TaskOptions";
 
-export default function TaskPicker({ tasks, onSelect, onCancel }) {
+export default function TaskPicker({ tasks, onClose }) {
     const [sortType, setSortType] = useState("priority");
+    const [selectedTask, setSelectedTask] = useState(null);
 
     const toTime = (x) => {
         if (!x) return 0;
@@ -12,13 +14,11 @@ export default function TaskPicker({ tasks, onSelect, onCancel }) {
     };
 
     const sortedTasks = [...tasks].sort((a, b) => {
-        // descending: highest priority first
         if (sortType === "priority") {
             return (Number(b.priority) || 0) - (Number(a.priority) || 0);
         }
-        // ascending: earliest end first
         if (sortType === "endtime") {
-            return toTime(a.end) - toTime(b.end);
+            return toTime(a.end_date) - toTime(b.end_date);
         }
         return 0;
     });
@@ -38,7 +38,7 @@ export default function TaskPicker({ tasks, onSelect, onCancel }) {
                 width: "350px",
             }}
         >
-            <h3>Select Task</h3>
+            <h3>Tasks on this day</h3>
 
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
                 <button
@@ -51,8 +51,9 @@ export default function TaskPicker({ tasks, onSelect, onCancel }) {
                         padding: "5px 10px",
                     }}
                 >
-          Sort by Priority
+                    Sort by Priority
                 </button>
+
                 <button
                     onClick={() => setSortType("endtime")}
                     style={{
@@ -63,7 +64,7 @@ export default function TaskPicker({ tasks, onSelect, onCancel }) {
                         padding: "5px 10px",
                     }}
                 >
-          Sort by End Time
+                    Sort by End Time
                 </button>
             </div>
 
@@ -71,7 +72,7 @@ export default function TaskPicker({ tasks, onSelect, onCancel }) {
                 {sortedTasks.map((task) => (
                     <li
                         key={task.id}
-                        onClick={() => onSelect(task)}
+                        onClick={() => setSelectedTask(task)}
                         style={{
                             backgroundColor: "#3a3a3a",
                             padding: "8px",
@@ -81,14 +82,15 @@ export default function TaskPicker({ tasks, onSelect, onCancel }) {
                         }}
                     >
                         <strong>{task.title}</strong> <br />
-            Priority: {task.priority || 0} | End: {new Date(task.end).toLocaleDateString()} <br />
-            Status: {task.status}
+                        Priority: {task.priority || 0} <br />
+                        End: {new Date(task.end_date).toLocaleDateString()} <br />
+                        Status: {task.status}
                     </li>
                 ))}
             </ul>
 
             <button
-                onClick={onCancel}
+                onClick={onClose}
                 style={{
                     marginTop: "10px",
                     backgroundColor: "red",
@@ -98,8 +100,15 @@ export default function TaskPicker({ tasks, onSelect, onCancel }) {
                     borderRadius: "4px",
                 }}
             >
-        Cancel
+                Close
             </button>
+
+            {selectedTask && (
+                <TaskOptions
+                    task={selectedTask}
+                    onClose={() => setSelectedTask(null)}
+                />
+            )}
         </div>
     );
 }
@@ -110,10 +119,9 @@ TaskPicker.propTypes = {
             id: PropTypes.number.isRequired,
             title: PropTypes.string.isRequired,
             priority: PropTypes.number,
-            end: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+            end_date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
             status: PropTypes.string,
         })
     ).isRequired,
-    onSelect: PropTypes.func.isRequired,
-    onCancel: PropTypes.func.isRequired,
+    onClose: PropTypes.func.isRequired,
 };

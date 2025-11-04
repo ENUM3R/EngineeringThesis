@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar";
+import { Calendar as MiniCal } from "react-big-calendar";
+import { dateFnsLocalizer, Views } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./themes.css"
 
 import useTasks from "./Hooks/useTasks";
-import { QuarterView } from "./Components/QuarterView";
+import { useAuth } from "./Hooks/useAuth";
+
 import { CustomToolbar } from "./Components/CustomToolbar";
 import AddTask from "./Components/AddTask";
 import DeleteTask from "./Components/DeleteTask";
 import EditTask from "./Components/EditTask";
 import TaskOptions from "./Components/TaskOptions";
 import TaskPicker from "./Components/TaskPicker";
+import TaskList from "./Components/TaskList";
+import { QuarterView } from "./Components/QuarterView";
 
 const locales = {
     "en-US": require("date-fns/locale/en-US"),
@@ -38,7 +42,9 @@ export default function CalendarPage() {
     const [taskListForDay, setTaskListForDay] = useState(null);
     const [taskActionType, setTaskActionType] = useState(null);
 
-    const {events, fetchEvents, addTask, deleteTask, editTask} = useTasks();
+    const { events, addTask, deleteTask, editTask } = useTasks();
+    const { points } = useAuth();
+    const [taskListMode, setTaskListMode] = useState(null);
 
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
@@ -58,7 +64,7 @@ export default function CalendarPage() {
     };
 
     const handleSelectEvent = (event) => {
-        const task = events.find(e => e.id === event.id || e.id === event.task_id);
+        const task = events.find(e => e.task_id === event.task_id || e.id === event.task_id);
         if (task) setTaskToDelete(task);
     };
 
@@ -73,7 +79,23 @@ export default function CalendarPage() {
                 position: "relative",
             }}
         >
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
+            <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "10px",
+                padding: "0 10px"
+            }}>
+                <div style={{
+                    background: "#222",
+                    color: "white",
+                    padding: "6px 14px",
+                    borderRadius: "6px",
+                    fontWeight: "bold",
+                }}>
+        POINTS: {points}
+                </div>
+
                 <button
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                     style={{
@@ -85,11 +107,11 @@ export default function CalendarPage() {
                         cursor: "pointer",
                     }}
                 >
-          Switch to {theme === "dark" ? "Light" : "Dark"} Mode
+        Switch to {theme === "dark" ? "Light" : "Dark"} Mode
                 </button>
             </div>
 
-            <Calendar
+            <MiniCal
                 localizer={localizer}
                 events={events}
                 startAccessor="start"
@@ -113,8 +135,20 @@ export default function CalendarPage() {
                 onView={setCurrentView}
                 components={{
                     toolbar: (props) => (
-                        <CustomToolbar {...props} currentView={currentView} setCurrentView={setCurrentView} />
+                        <CustomToolbar
+                            {...props}
+                            currentView={currentView}
+                            setCurrentView={setCurrentView}
+                            onOpenTaskList={setTaskListMode}
+                        />
                     ),
+                }}
+
+                formats={{
+                    dayHeaderFormat: (date, culture, local) => local.format(date, "MMM dd", culture),
+                    monthHeaderFormat: (date, culture, local) => local.format(date, "MMMM yyyy", culture),
+                    quarterHeaderFormat: (date) =>
+                        `Quarter: ${date.toLocaleString("en-US", { month: "long", year: "numeric" })}`,
                 }}
                 eventPropGetter={(event) => {
                     let backgroundColor = "#777";
@@ -186,8 +220,8 @@ export default function CalendarPage() {
             {taskToDelete && (
                 <DeleteTask
                     task={taskToDelete}
-                    onDelete={async () => {
-                        await deleteTask(taskToDelete.id);
+                    onDelete={async (task_id) => {
+                        await deleteTask(task_id);
                         setTaskToDelete(null);
                     }}
                     onCancel={() => setTaskToDelete(null)}
@@ -216,6 +250,12 @@ export default function CalendarPage() {
                         setTaskListForDay(null);
                         setTaskActionType(null);
                     }}
+                />
+            )}
+            {taskListMode && (
+                <TaskList
+                    mode={taskListMode}
+                    onClose={() => setTaskListMode(null)}
                 />
             )}
         </div>

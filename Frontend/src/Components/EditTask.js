@@ -26,8 +26,8 @@ export default function EditTask({ task, onSubmit, onCancel }) {
             priority: Number(priority),
             points: task.points || 0,
             status,
-            start_time: formattedStart,
-            end_time: formattedEnd,
+            start_date: formattedStart,
+            end_date: formattedEnd,
         });
     };
 
@@ -69,6 +69,7 @@ export default function EditTask({ task, onSubmit, onCancel }) {
                         <option value="in progress">In Progress</option>
                         <option value="done">Done</option>
                         <option value="abandoned">Abandoned</option>
+                        <option value="overdue">Overdue</option>
                     </select>
                 </div>
                 <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>

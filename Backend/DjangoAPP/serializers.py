@@ -1,8 +1,19 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Task
+from .models import Task, WorkSession
+
+class WorkSessionSerializer(serializers.ModelSerializer):
+    hours_spent: float = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = WorkSession
+        fields: set[str] = {'id', 'start_time', 'end_time', 'hours_spent'}
 
 class TaskSerializer(serializers.ModelSerializer):
+    sessions = WorkSessionSerializer(many=True, read_only=True)
+    total_hours: float = serializers.FloatField(read_only=True) 
+    day_span: int = serializers.IntegerField(read_only=True) 
+    
     class Meta:
         model = Task
         fields = '__all__'

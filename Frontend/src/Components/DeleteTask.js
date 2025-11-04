@@ -24,32 +24,25 @@ export default function DeleteTask({task, onDelete, onCancel}){
             <p><strong>Priority:</strong> {task.priority}</p>
             <p><strong>End Time:</strong> {new Date(task.end).toLocaleDateString()}</p>
             <p><strong>Status:</strong> {task.status}</p>
-            <div style={{
-                marginTop:'10px',
-                display:"flex",
-                justifyContent:'space-between'
-            }}>
+            <div style={{ marginTop:'10px', display:"flex", justifyContent:'space-between' }}>
                 <button
-                    onClick={() => onDelete(task)}
-                    style={{
-                        backgroundColor: 'red',
-                        color: 'white',
-                        border: 'none',
-                        padding: '5px 10px',
-                        borderRadius: '4px'
-                    }}>
+                    onClick={() => onDelete(task.task_id)}
+                    style={{ backgroundColor:'red', color:'#fff', border:'none', padding:'5px 10px', borderRadius:'4px' }}
+                >
                     Delete
                 </button>
+
                 <button
                     onClick={onCancel}
                     style={{
-                        backgroundColor: '#ccc', 
-                        color: '#000', 
-                        border: 'none', 
-                        padding: '5px 10px',
-                        borderRadius: '4px'
-                    }}>
-                Cancel
+                        backgroundColor:'#ccc',
+                        color:'#000',
+                        border:'none',
+                        padding:'5px 10px',
+                        borderRadius:'4px'
+                    }}
+                >
+                    Cancel
                 </button>
             </div>
         </div>
@@ -57,7 +50,7 @@ export default function DeleteTask({task, onDelete, onCancel}){
 }
 DeleteTask.propTypes = {
     task: PropTypes.shape({
-        id: PropTypes.number.isRequired,
+        task_id: PropTypes.number.isRequired,
         title: PropTypes.string.isRequired,
         description: PropTypes.string,
         priority: PropTypes.number,

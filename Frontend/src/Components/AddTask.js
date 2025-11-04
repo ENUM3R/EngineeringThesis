@@ -6,15 +6,33 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
     const [description, setDescription] = useState(defaultValues?.description || "");
     const [priority, setPriority] = useState(defaultValues?.priority || 1);
     const [status, setStatus] = useState(defaultValues?.status || "pending");
-    const [end_time, setEndTime] = useState(
-        defaultValues?.end_time 
-            ? new Date(defaultValues.end_time).toISOString().slice(0, 10)
+    const [start_date, setStartDate] = useState(
+        defaultValues?.start_date
+            ? new Date(defaultValues.start_date).toISOString().slice(0, 16)
+            : ""
+    );
+    const [end_date, setEndDate] = useState(
+        defaultValues?.end_date
+            ? new Date(defaultValues.end_date).toISOString().slice(0, 16)
             : ""
     );
 
+    // Optional work session hours
+    const [start_time, setStartTime] = useState(defaultValues?.start_time || "");
+    const [end_time, setEndTime] = useState(defaultValues?.end_time || "");
+
     const handleSubmit = (event) => {
         event.preventDefault();
-        onSubmit({ title, description, priority, status, end_time });
+        onSubmit({
+            title,
+            description,
+            priority,
+            status,
+            start_date,
+            end_date,
+            start_time: start_time || null,
+            end_time: end_time || null
+        });
     };
 
     return (
@@ -29,7 +47,7 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
                 padding: "20px",
                 borderRadius: "8px",
                 zIndex: 1000,
-                width: "300px",
+                width: "330px",
             }}
         >
             <h3>Create Task</h3>
@@ -45,6 +63,7 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
                         style={{ width: "100%" }}
                     />
                 </div>
+
                 <div>
                     <label>Description:</label>
                     <br />
@@ -54,6 +73,7 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
                         style={{ width: "100%" }}
                     />
                 </div>
+
                 <div>
                     <label>Priority: {priority}</label>
                     <br />
@@ -63,20 +83,54 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
                         max="10"
                         value={priority}
                         onChange={(e) => setPriority(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <label>End Time:</label>
-                    <br />
-                    <input
-                        type="date"
-                        value={end_time}
-                        onChange={(e) => setEndTime(e.target.value)}
                         style={{ width: "100%" }}
                     />
                 </div>
+
                 <div>
-                    <label>Status: {status}</label>
+                    <label>Start Date:</label>
+                    <br />
+                    <input
+                        type="datetime-local"
+                        value={start_date}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        style={{ width: "100%" }}
+                    />
+                </div>
+
+                <div>
+                    <label>End Date:</label>
+                    <br />
+                    <input
+                        type="datetime-local"
+                        value={end_date}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        style={{ width: "100%" }}
+                        required
+                    />
+                </div>
+
+                <hr />
+                <label>Work Session (Optional):</label>
+                <div style={{ display: "flex", gap: "10px" }}>
+                    <input
+                        type="time"
+                        value={start_time}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        style={{ flex: 1 }}
+                        placeholder="Start"
+                    />
+                    <input
+                        type="time"
+                        value={end_time}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        style={{ flex: 1 }}
+                        placeholder="End"
+                    />
+                </div>
+
+                <div>
+                    <label>Status:</label>
                     <br />
                     <select
                         value={status}
@@ -90,6 +144,7 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
                         <option value="overdue">Overdue</option>
                     </select>
                 </div>
+
                 <div
                     style={{
                         marginTop: "10px",
@@ -107,7 +162,7 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
                             borderRadius: "4px",
                         }}
                     >
-            Add
+                        Add
                     </button>
                     <button
                         type="button"
@@ -120,10 +175,36 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
                             borderRadius: "4px",
                         }}
                     >
-            Cancel
+                        Cancel
                     </button>
                 </div>
             </form>
+
+            <hr />
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <button
+                    style={{
+                        backgroundColor: "#444",
+                        color: "white",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        border: "1px solid #666",
+                    }}
+                >
+                    🔁 Make Cyclic
+                </button>
+                <button
+                    style={{
+                        backgroundColor: "#444",
+                        color: "white",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        border: "1px solid #666",
+                    }}
+                >
+                    ➕ Split Task
+                </button>
+            </div>
         </div>
     );
 }
@@ -131,11 +212,5 @@ export default function AddTask({ onSubmit, onCancel, defaultValues }) {
 AddTask.propTypes = {
     onSubmit: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
-    defaultValues: PropTypes.shape({
-        title: PropTypes.string,
-        description: PropTypes.string,
-        priority: PropTypes.number,
-        status: PropTypes.string,
-        end_time: PropTypes.string,
-    }),
+    defaultValues: PropTypes.object,
 };
