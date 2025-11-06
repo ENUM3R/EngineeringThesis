@@ -1,15 +1,8 @@
 module.exports = {
-    parser: "@babel/eslint-parser",
     parserOptions: {
-        requireConfigFile: false,
-        babelOptions: {
-            presets: ["@babel/preset-react"],
-        },
         ecmaVersion: 2021,
         sourceType: "module",
-        ecmaFeatures: {
-            jsx: true,
-        },
+        ecmaFeatures: { jsx: true },
     },
     env: {
         browser: true,
@@ -25,6 +18,7 @@ module.exports = {
         "no-unused-vars": ["warn", { varsIgnorePattern: "React" }],
         "indent": ["error", 4], // 4 spaces per indentation level
         "no-mixed-spaces-and-tabs": "error",
+        "no-undef": "off",
     },
     settings: {
         react: {

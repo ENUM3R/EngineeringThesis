@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import TaskList from "./TaskList";
 
 export const CustomToolbar = ({
     label,
@@ -7,9 +8,9 @@ export const CustomToolbar = ({
     onView,
     currentView,
     setCurrentView,
-    onOpenTaskList,
 }) => {
     const [showTaskMenu, setShowTaskMenu] = useState(false);
+    const [listMode, setListMode] = useState(null);
 
     return (
         <div
@@ -22,9 +23,20 @@ export const CustomToolbar = ({
             }}
         >
             <div>
-                <button onClick={() => onNavigate("TODAY")}>Today</button>
-                <button onClick={() => onNavigate("PREV")}>Back</button>
-                <button onClick={() => onNavigate("NEXT")}>Next</button>
+                <button 
+                    onClick={() => setShowTaskMenu(prev => !prev)}
+                    style={{
+                        backgroundColor: "#b8860b",
+                        color: "white",
+                        border: "none",
+                        padding: "6px 12px",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                    }}
+                >
+                    Tasks ▼
+                </button>
             </div>
 
             <span className="rbc-toolbar-label" style={{ fontWeight: "bold" }}>
@@ -51,57 +63,49 @@ export const CustomToolbar = ({
                         {view.charAt(0).toUpperCase() + view.slice(1)}
                     </button>
                 ))}
-                <div style={{ position: "relative" }}>
-                    <button
-                        onClick={() => setShowTaskMenu(!showTaskMenu)}
+
+                {showTaskMenu && (
+                    <div
                         style={{
-                            marginLeft: "10px",
-                            padding: "5px 12px",
-                            backgroundColor: "#4a4a4a",
-                            color: "white",
+                            position: "absolute",
+                            left: 0,
+                            top: "110%",
+                            backgroundColor: "#fff",
+                            border: "1px solid #ccc",
                             borderRadius: "4px",
-                            border: "1px solid #333",
+                            boxShadow: "0px 2px 6px rgba(0,0,0,0.2)",
+                            zIndex: 999,
+                            width: "140px",
                         }}
                     >
-                        Tasks
-                    </button>
-                    {showTaskMenu && (
-                        <div
-                            style={{
-                                position: "absolute",
-                                right: 0,
-                                top: "110%",
-                                backgroundColor: "#fff",
-                                border: "1px solid #ccc",
-                                borderRadius: "4px",
-                                boxShadow: "0px 2px 6px rgba(0,0,0,0.2)",
-                                zIndex: 999,
-                                width: "140px",
+                        <button
+                            style={{ width: "100%", padding: "8px" }}
+                            onClick={() => {
+                                setListMode("active");
+                                setShowTaskMenu(false);
                             }}
                         >
-                            <button
-                                style={{ width: "100%", padding: "8px", borderBottom: "1px solid #ccc" }}
-                                onClick={() => {
-                                    onOpenTaskList("active");
-                                    setShowTaskMenu(false);
-                                }}
-                            >
-                                Default
-                            </button>
-
-                            <button
-                                style={{ width: "100%", padding: "8px" }}
-                                onClick={() => {
-                                    onOpenTaskList("done");
-                                    setShowTaskMenu(false);
-                                }}
-                            >
-                                Done
-                            </button>
-                        </div>
-                    )}
-                </div>
+                            Active
+                        </button>
+                        <button
+                            style={{ width: "100%", padding: "8px" }}
+                            onClick={() => {
+                                setListMode("done");
+                                setShowTaskMenu(false);
+                            }}
+                        >
+                            Done
+                        </button>
+                    </div>
+                )}
             </div>
+
+            {listMode && (
+                <TaskList
+                    mode={listMode}
+                    onClose={() => setListMode(null)}
+                />
+            )}
         </div>
     );
 };
@@ -112,5 +116,4 @@ CustomToolbar.propTypes = {
     onView: PropTypes.func.isRequired,
     currentView: PropTypes.string.isRequired,
     setCurrentView: PropTypes.func.isRequired,
-    onOpenTaskList: PropTypes.func,
 };

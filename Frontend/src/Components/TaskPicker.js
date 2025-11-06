@@ -2,26 +2,16 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import TaskOptions from "./TaskOptions";
 
-export default function TaskPicker({ tasks, onClose }) {
+export default function TaskPicker({ tasks, onSelect, onCancel }) {
     const [sortType, setSortType] = useState("priority");
     const [selectedTask, setSelectedTask] = useState(null);
+    const [pos, setPos] = useState(null);
 
-    const toTime = (x) => {
-        if (!x) return 0;
-        if (x instanceof Date) return x.getTime();
-        const d = new Date(x);
-        return isNaN(d.getTime()) ? 0 : d.getTime();
-    };
-
-    const sortedTasks = [...tasks].sort((a, b) => {
-        if (sortType === "priority") {
-            return (Number(b.priority) || 0) - (Number(a.priority) || 0);
-        }
-        if (sortType === "endtime") {
-            return toTime(a.end_date) - toTime(b.end_date);
-        }
-        return 0;
-    });
+    const sorted = [...tasks].sort((a, b) =>
+        sortType === "priority"
+            ? b.priority - a.priority
+            : new Date(a.end) - new Date(b.end)
+    );
 
     return (
         <div
@@ -40,39 +30,19 @@ export default function TaskPicker({ tasks, onClose }) {
         >
             <h3>Tasks on this day</h3>
 
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                <button
-                    onClick={() => setSortType("priority")}
-                    style={{
-                        backgroundColor: sortType === "priority" ? "#007bff" : "#444",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        padding: "5px 10px",
-                    }}
-                >
-                    Sort by Priority
-                </button>
-
-                <button
-                    onClick={() => setSortType("endtime")}
-                    style={{
-                        backgroundColor: sortType === "endtime" ? "#007bff" : "#444",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        padding: "5px 10px",
-                    }}
-                >
-                    Sort by End Time
-                </button>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <button onClick={() => setSortType("priority")}>Sort by Priority</button>
+                <button onClick={() => setSortType("end")}>Sort by End Date</button>
             </div>
 
-            <ul style={{ maxHeight: "200px", overflowY: "auto", padding: 0, listStyle: "none" }}>
-                {sortedTasks.map((task) => (
+            <ul style={{ maxHeight: "200px", overflowY: "auto", listStyle: "none", padding: 0 }}>
+                {sorted.map((task) => (
                     <li
-                        key={task.id}
-                        onClick={() => setSelectedTask(task)}
+                        key={task.task_id}
+                        onClick={(e) => {
+                            setSelectedTask(task);
+                            setPos({ x: e.clientX, y: e.clientY });
+                        }}
                         style={{
                             backgroundColor: "#3a3a3a",
                             padding: "8px",
@@ -81,32 +51,30 @@ export default function TaskPicker({ tasks, onClose }) {
                             cursor: "pointer",
                         }}
                     >
-                        <strong>{task.title}</strong> <br />
-                        Priority: {task.priority || 0} <br />
-                        End: {new Date(task.end_date).toLocaleDateString()} <br />
-                        Status: {task.status}
+                        <b>{task.title}</b>
+                        <br /> Priority: {task.priority}
+                        <br /> End: {task.end.toLocaleDateString()}
+                        <br /> Status: {task.status}
                     </li>
                 ))}
             </ul>
 
-            <button
-                onClick={onClose}
-                style={{
-                    marginTop: "10px",
-                    backgroundColor: "red",
-                    color: "white",
-                    border: "none",
-                    padding: "5px 10px",
-                    borderRadius: "4px",
-                }}
-            >
+            <button onClick={onCancel} style={{ backgroundColor: "red", border: "none", padding: "6px" }}>
                 Close
             </button>
 
-            {selectedTask && (
+            {selectedTask && pos && (
                 <TaskOptions
+                    position={pos}
                     task={selectedTask}
-                    onClose={() => setSelectedTask(null)}
+                    onAdd={() => onSelect({ action: "add", task: null })}
+                    onEdit={() => onSelect({ action: "edit", task: selectedTask })}
+                    onDelete={() => onSelect({ action: "delete", task: selectedTask })}
+                    onDone={() => onSelect({ action: "done", task: selectedTask })}
+                    onClose={() => {
+                        setSelectedTask(null);
+                        setPos(null);
+                    }}
                 />
             )}
         </div>
@@ -114,14 +82,7 @@ export default function TaskPicker({ tasks, onClose }) {
 }
 
 TaskPicker.propTypes = {
-    tasks: PropTypes.arrayOf(
-        PropTypes.shape({
-            id: PropTypes.number.isRequired,
-            title: PropTypes.string.isRequired,
-            priority: PropTypes.number,
-            end_date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
-            status: PropTypes.string,
-        })
-    ).isRequired,
-    onClose: PropTypes.func.isRequired,
+    tasks: PropTypes.array.isRequired,
+    onSelect: PropTypes.func.isRequired,
+    onCancel: PropTypes.func.isRequired,
 };

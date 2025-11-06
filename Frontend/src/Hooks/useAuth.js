@@ -75,5 +75,5 @@ export function useAuth() {
         if (getAccessToken()) getProfile();
     }, []);
 
-    return { login, register, logout, points, getAccessToken  };
+    return { login, register, logout, points, getAccessToken, getProfile };
 }

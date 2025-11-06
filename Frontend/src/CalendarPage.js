@@ -1,3 +1,4 @@
+// External libraries
 import React, { useEffect, useState } from "react";
 import { Calendar as MiniCal } from "react-big-calendar";
 import { dateFnsLocalizer, Views } from "react-big-calendar";
@@ -5,9 +6,11 @@ import { format, parse, startOfWeek, getDay } from "date-fns";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./themes.css"
 
+//Hooks
 import useTasks from "./Hooks/useTasks";
 import { useAuth } from "./Hooks/useAuth";
 
+// Components
 import { CustomToolbar } from "./Components/CustomToolbar";
 import AddTask from "./Components/AddTask";
 import DeleteTask from "./Components/DeleteTask";
@@ -33,40 +36,53 @@ export default function CalendarPage() {
     const [theme, setTheme] = useState("dark");
     const [currentView, setCurrentView] = useState(Views.MONTH);
 
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [triggerRefresh, setTriggerRefresh] = useState(false);
+
     const [taskToAdd, setAddTask] = useState(false);
     const [selectedDate, setSelectedDate] = useState(null);
+
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [taskToEdit, setTaskToEdit] = useState(null);
+
     const [dayOptionsPos, setDayOptionsPos] = useState(null);
     const [dayOptionsDate, setDayOptionsDate] = useState(null);
+
     const [taskListForDay, setTaskListForDay] = useState(null);
     const [taskActionType, setTaskActionType] = useState(null);
 
-    const { events, addTask, deleteTask, editTask } = useTasks();
-    const { points } = useAuth();
     const [taskListMode, setTaskListMode] = useState(null);
+
+    const { events, doneEvents, addTask, deleteTask, editTask, markDone, fetchEvents, createCyclicTask, createSplitTask } = useTasks();
+    const { points, getProfile } = useAuth();
 
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
     }, [theme]);
 
     useEffect(() => {
-        const handleOutsideClick = () => setDayOptionsPos(null);
-        if (dayOptionsPos) document.addEventListener("click", handleOutsideClick);
-        return () => document.removeEventListener("click", handleOutsideClick);
-    }, [dayOptionsPos]);
+        fetchEvents();
+        getProfile(); // Refresh points on mount and refresh
+    }, [triggerRefresh]);
 
     const handleSelectSlot = (slotInfo) => {
-        const defaultX = window.innerWidth / 2 - 75;
-        const defaultY = window.innerHeight / 2 - 100;
-        setDayOptionsPos({ x: defaultX, y: defaultY });
+        setDayOptionsPos({ x: 300, y: 200 });
         setDayOptionsDate({ start: slotInfo.start, end: slotInfo.end });
     };
 
     const handleSelectEvent = (event) => {
-        const task = events.find(e => e.task_id === event.task_id || e.id === event.task_id);
-        if (task) setTaskToDelete(task);
+        setTaskToEdit(event);
     };
+
+    // Include done tasks in calendar but with blur effect
+    const allEvents = [...events, ...doneEvents];
+    
+    const filteredEvents = allEvents.filter((e) => {
+        const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = statusFilter === "all" || e.status === statusFilter;
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <div
@@ -79,6 +95,7 @@ export default function CalendarPage() {
                 position: "relative",
             }}
         >
+
             <div style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -86,34 +103,120 @@ export default function CalendarPage() {
                 marginBottom: "10px",
                 padding: "0 10px"
             }}>
-                <div style={{
-                    background: "#222",
-                    color: "white",
-                    padding: "6px 14px",
-                    borderRadius: "6px",
-                    fontWeight: "bold",
-                }}>
-        POINTS: {points}
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <div style={{
+                        background: "#222",
+                        color: "white",
+                        padding: "6px 14px",
+                        borderRadius: "6px",
+                        fontWeight: "bold",
+                    }}>
+                        POINTS: {points}
+                    </div>
+                    <button
+                        onClick={() => {
+                            // Placeholder for future marketplace
+                            alert("Marketplace coming soon!");
+                        }}
+                        style={{
+                            background: "#4a148c",
+                            color: "white",
+                            padding: "6px 14px",
+                            borderRadius: "6px",
+                            fontWeight: "bold",
+                            border: "none",
+                            cursor: "pointer",
+                        }}
+                    >
+                        🛒 Marketplace
+                    </button>
                 </div>
 
-                <button
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                        style={{
+                            backgroundColor: theme === "dark" ? "#1e34f5ff" : "#333",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "4px",
+                            padding: "6px 12px",
+                            cursor: "pointer",
+                        }}
+                    >
+                        Switch to {theme === "dark" ? "Light" : "Dark"} Mode
+                    </button>
+
+                    <button
+                        onClick={() => setTriggerRefresh(!triggerRefresh)}
+                        style={{
+                            backgroundColor: "#008cff",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "4px",
+                            padding: "6px 12px",
+                            cursor: "pointer",
+                        }}
+                    >
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div style={{
+                display: "flex",
+                gap: "10px",
+                marginBottom: "12px",
+                padding: "0 10px"
+            }}>
+                <input
+                    type="text"
+                    placeholder="Search task..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     style={{
-                        backgroundColor: theme === "dark" ? "#1e34f5ff" : "#333",
-                        color: "#fff",
+                        padding: "6px 8px",
+                        borderRadius: "4px",
+                        border: "1px solid #777",
+                        width: "200px"
+                    }}
+                />
+
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    style={{
+                        padding: "6px 8px",
+                        borderRadius: "4px",
+                        border: "1px solid #777",
+                    }}
+                >
+                    <option value="all">All</option>
+                    <option value="pending">Pending</option>
+                    <option value="in progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="done">Done</option>
+                </select>
+
+                <button
+                    onClick={() => setTaskListMode("active")}
+                    style={{
+                        backgroundColor: "#00b52e",
+                        color: "white",
                         border: "none",
                         borderRadius: "4px",
                         padding: "6px 12px",
-                        cursor: "pointer",
+                        cursor: "pointer"
                     }}
                 >
-        Switch to {theme === "dark" ? "Light" : "Dark"} Mode
+                    Open Task List
                 </button>
             </div>
 
             <MiniCal
                 localizer={localizer}
-                events={events}
+                events={filteredEvents}
                 startAccessor="start"
                 endAccessor="end"
                 selectable
@@ -145,34 +248,42 @@ export default function CalendarPage() {
                 }}
 
                 formats={{
-                    dayHeaderFormat: (date, culture, local) => local.format(date, "MMM dd", culture),
+                    dayHeaderFormat: (date, culture, local) => local.format(date, "dd MM", culture),
                     monthHeaderFormat: (date, culture, local) => local.format(date, "MMMM yyyy", culture),
                     quarterHeaderFormat: (date) =>
                         `Quarter: ${date.toLocaleString("en-US", { month: "long", year: "numeric" })}`,
                 }}
                 eventPropGetter={(event) => {
                     let backgroundColor = "#777";
+                    let opacity = 1;
+                    let filter = "none";
+                    
                     switch (event.status){
-                    case "pending":
-                        backgroundColor = "#fda80bb6";
+                    case "pending": backgroundColor = "#fda80bb6"; break;
+                    case "in progress": backgroundColor = "#b007ffff"; break;
+                    case "completed": backgroundColor = "#14fff3ff"; break;
+                    case "overdue": backgroundColor = "#f70073"; break;
+                    case "done": 
+                        backgroundColor = "#00ff22"; 
+                        opacity = 0.8;
+                        filter = "blur(1px)";
                         break;
-                    case "in progress":
-                        backgroundColor = "#b007ffff";
-                        break;
-                    case "completed":
-                        backgroundColor = "#14fff3ff";
-                        break;
-                    case "overdue":
-                        backgroundColor = "#f70073";
-                        break;
-                    case "done":
-                        backgroundColor = "#00ff22";
+                    case "abandoned":
+                        backgroundColor = "#888888";
+                        opacity = 0.8;
+                        filter = "blur(1px)";
                         break;
                     }
-                    return { style: { backgroundColor, color: "#fff" } };
+                    return { 
+                        style: { 
+                            backgroundColor, 
+                            color: "#fff",
+                            opacity,
+                            filter
+                        } 
+                    };
                 }}
             />
-
             {dayOptionsPos && (
                 <TaskOptions
                     position={dayOptionsPos}
@@ -203,20 +314,40 @@ export default function CalendarPage() {
                         }
                         setDayOptionsPos(null);
                     }}
-                    onCancel={() => setDayOptionsPos(null)}
+                    onClose={() => setDayOptionsPos(null)}
+                    onDone={async (taskId) => {
+                        if (taskId) {
+                            try {
+                                await markDone(taskId);
+                                await getProfile(); // Refresh points display
+                                await fetchEvents(); // Refresh calendar
+                            } catch (err) {
+                                console.error("Error marking task as done:", err);
+                                alert("Error marking task as done. Please try again.");
+                            }
+                        }
+                    }}
+                    task={null}
                 />
             )}
 
             {taskToAdd && (
                 <AddTask
-                    onSubmit={async (data) => {
-                        await addTask(data, selectedDate);
+                    onSubmit={async (data, isCyclic, isSplit) => {
+                        if (isCyclic) {
+                            await createCyclicTask(data);
+                        } else if (isSplit) {
+                            await createSplitTask(data);
+                        } else {
+                            await addTask(data, selectedDate);
+                        }
                         setAddTask(false);
                     }}
-                    onCancel={() => setAddTask(false)}
+                    onClose={() => setAddTask(false)}
                     defaultValues={{}}
                 />
             )}
+
             {taskToDelete && (
                 <DeleteTask
                     task={taskToDelete}
@@ -224,19 +355,30 @@ export default function CalendarPage() {
                         await deleteTask(task_id);
                         setTaskToDelete(null);
                     }}
-                    onCancel={() => setTaskToDelete(null)}
+                    onClose={() => setTaskToDelete(null)}
                 />
             )}
+
             {taskToEdit && (
                 <EditTask
                     task={taskToEdit}
-                    onSubmit={async (data) => {
+                    onSubmit={async (data, isCyclic, isSplit, shouldMarkDone) => {
                         await editTask(data);
+                        // If status is "done" or "abandoned", mark task as done to add points
+                        if (shouldMarkDone && (data.status === "done" || data.status === "abandoned")) {
+                            try {
+                                await markDone(data.task_id);
+                                await getProfile();
+                            } catch (err) {
+                                console.error("Error marking task as done:", err);
+                            }
+                        }
                         setTaskToEdit(null);
                     }}
-                    onCancel={() => setTaskToEdit(null)}
+                    onClose={() => setTaskToEdit(null)}
                 />
             )}
+
             {taskListForDay && (
                 <TaskPicker
                     tasks={taskListForDay}
@@ -246,12 +388,13 @@ export default function CalendarPage() {
                         setTaskListForDay(null);
                         setTaskActionType(null);
                     }}
-                    onCancel={() => {
+                    onClose={() => {
                         setTaskListForDay(null);
                         setTaskActionType(null);
                     }}
                 />
             )}
+
             {taskListMode && (
                 <TaskList
                     mode={taskListMode}

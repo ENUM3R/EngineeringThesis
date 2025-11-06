@@ -1,29 +1,20 @@
 import React from "react";
-import { Calendar as MiniCal  } from "react-big-calendar";
+import { Calendar as MiniCal, Views } from "react-big-calendar";
 import PropTypes from "prop-types";
 
-export const QuarterView = ({ date, events, localizer }) => {
+function QuarterViewComponent({ date, events, localizer, onSelectSlot, onSelectEvent }) {
     const months = [0, 1, 2].map(i =>
         new Date(date.getFullYear(), date.getMonth() + i, 1)
     );
-    const DayWrapper = ({ children }) => (
-        <div style={{ position: "relative" }}>{children}</div>
-    );
-
-    DayWrapper.propTypes = {
-        children: PropTypes.node
-    };
 
     return (
-        <div style={{ display: "flex", gap: "10px", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", gap: "10px", justifyContent: "space-between", height: "100%" }}>
             {months.map((monthDate, index) => {
                 const start = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
                 const end = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
 
                 const filteredEvents = events.filter(
-                    e =>
-                        new Date(e.start) >= start &&
-                        new Date(e.start) <= end
+                    (e) => new Date(e.start) >= start && new Date(e.start) <= end
                 );
 
                 return (
@@ -39,38 +30,86 @@ export const QuarterView = ({ date, events, localizer }) => {
                         }}
                     >
                         <h3 style={{ textAlign: "center" }}>
-                            {monthDate.toLocaleString("en-US", {
-                                month: "long",
-                                year: "numeric",
-                            })}
+                            {monthDate.toLocaleString("en-US", { month: "long", year: "numeric" })}
                         </h3>
 
                         <MiniCal
                             localizer={localizer}
-                            views={["month"]}
+                            selectable
                             events={filteredEvents}
-                            viewAccessor="quarter"
-                            getNow={() => new Date()}
                             startAccessor="start"
                             endAccessor="end"
-                            style={{ height: 350 }}
+                            onSelectEvent={onSelectEvent}
+                            onSelectSlot={onSelectSlot}
                             toolbar={false}
-                            selectable={false}
-                            popup={false}
-                            onSelectSlot={() => {}}
-                            onSelectEvent={() => {}}
-                            components={{ dateCellWrapper: DayWrapper }}
+                            style={{ height: 350 }}
+                            eventPropGetter={(event) => {
+                                let backgroundColor = "#777";
+                                switch (event.status) {
+                                case "pending": backgroundColor = "#fda80bb6"; break;
+                                case "in progress": backgroundColor = "#b007ffff"; break;
+                                case "completed": backgroundColor = "#14fff3ff"; break;
+                                case "overdue": backgroundColor = "#f70073"; break;
+                                case "done": backgroundColor = "#00ff22"; break;
+                                }
+                                return { style: { backgroundColor, color: "#fff" } };
+                            }}
                         />
-
                     </div>
                 );
             })}
         </div>
     );
-};
-QuarterView.title = (date,  {localizer}) => `Quarter: ${localizer.format(date, "MMMM yyyy")}`;
-QuarterView.propTypes = {
+}
+
+export const QuarterView = Object.assign(QuarterViewComponent, {
+    range(date) {
+        const start = new Date(date.getFullYear(), date.getMonth(), 1);
+        const end = new Date(date.getFullYear(), date.getMonth() + 3, 0);
+
+        const days = [];
+        let cur = new Date(start);
+        while (cur <= end) {
+            days.push(cur);
+            cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 1);
+        }
+        return days;
+    },
+
+    navigate(date, action) {
+        const newDate = new Date(date);
+        if (action === "NEXT") newDate.setMonth(newDate.getMonth() + 3);
+        else if (action === "PREV") newDate.setMonth(newDate.getMonth() - 3);
+        return newDate;
+    },
+
+    title(date) {
+        const start = date.toLocaleString("en-US", { month: "long" });
+        const end = new Date(date.getFullYear(), date.getMonth() + 2)
+            .toLocaleString("en-US", { month: "long", year: "numeric" });
+
+        return `${start} - ${end}`;
+    },
+
+    dateType: Views.MONTH,
+});
+
+QuarterViewComponent.propTypes = {
     date: PropTypes.instanceOf(Date).isRequired,
-    events: PropTypes.array.isRequired,
+    events: PropTypes.arrayOf(
+        PropTypes.shape({
+            start: PropTypes.oneOfType([
+                PropTypes.string,
+                PropTypes.instanceOf(Date)
+            ]).isRequired,
+            end: PropTypes.oneOfType([
+                PropTypes.string,
+                PropTypes.instanceOf(Date)
+            ]).isRequired,
+            status: PropTypes.string,
+        })
+    ).isRequired,
     localizer: PropTypes.object.isRequired,
+    onSelectSlot: PropTypes.func,
+    onSelectEvent: PropTypes.func,
 };

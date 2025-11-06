@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, time
 
 STATUS_CHOICES: list[tuple] = [
     ("pending", "Pending"),
@@ -14,8 +14,8 @@ class Task(models.Model):
     user: int = models.ForeignKey(User, null=True, default=None, on_delete=models.CASCADE, related_name="tasks")
     title: str = models.CharField(max_length=200)
     description: str = models.TextField(blank=True)
-    start_date: date = models.DateTimeField(null=True, blank=True)
-    end_date: date = models.DateTimeField(null=True, blank=True)
+    start_date: datetime = models.DateTimeField(null=True, blank=True)
+    end_date: datetime = models.DateTimeField(null=True, blank=True)
     priority: int = models.IntegerField(default=0)
     points: int = models.IntegerField(default=0)
     status: str = models.CharField(max_length=50, blank=True, default="pending")
@@ -25,7 +25,7 @@ class Task(models.Model):
     
     @property
     def total_hours(self) -> int:
-        if self.sessions.existis():
+        if self.sessions.exists():
             return sum(session.hours_spent for session in self.sessions.all())
         return 1
     
@@ -44,8 +44,8 @@ class Task(models.Model):
 
 class WorkSession(models.Model):
     task: int = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="sessions")
-    start_time: date = models.TimeField(null=True, blank=True)
-    end_time: date = models.TimeField(null=True, blank=True)
+    start_time: time = models.TimeField(null=True, blank=True)
+    end_time: time = models.TimeField(null=True, blank=True)
 
     @property
     def hours_spent(self) -> float:
@@ -57,6 +57,7 @@ class WorkSession(models.Model):
 class CyclicTask(models.Model):
     task = models.OneToOneField(Task, on_delete=models.CASCADE, related_name="cycle")
     frequency: str = models.CharField(max_length=50)
+    occurrences_count: int = models.IntegerField(default=12)
 
 class SubTask(models.Model):
     parent_task: int = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="subtasks")

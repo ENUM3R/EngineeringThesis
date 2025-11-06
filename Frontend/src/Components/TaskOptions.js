@@ -1,12 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-export default function TaskOptions({position, onAdd, onDelete, onEdit}){
+export default function TaskOptions({position, task, onAdd, onDelete, onEdit, onDone, onClose}){
     if(!position) return null;
+
+    const stop = (e) => e.stopPropagation();
 
     return (
         <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={stop}
             style={{
                 position: "absolute",
                 top: position.y,
@@ -20,33 +22,11 @@ export default function TaskOptions({position, onAdd, onDelete, onEdit}){
                 width: "150px",
             }}
         >
-            <div
-                style = {{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
-                }}
-            ><button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onAdd();
-                    }}
-                    style={buttonStyle}
-                >➕  Add new task</button>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete();
-                    }}
-                    style={buttonStyle}
-                >❌ Delete task</button>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit();
-                    }}
-                    style={buttonStyle}
-                >✏️ Edit task</button>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <button style={buttonStyle} onClick={() => { onAdd(); onClose(); }}>➕ Add Task</button>
+                <button style={buttonStyle} onClick={() => { onEdit(task); onClose(); }}>✏️ Edit</button>
+                <button style={buttonStyle} onClick={() => { onDelete(task); onClose(); }}>❌ Delete</button>
+                <button style={buttonStyle} onClick={() => { if (task && task.task_id) { onDone(task.task_id); } onClose(); }}>✅ Mark Done</button>
             </div>
         </div>
     );
@@ -63,11 +43,11 @@ const buttonStyle = {
 };
 
 TaskOptions.propTypes = {
-    position: PropTypes.shape({
-        x: PropTypes.number.isRequired,
-        y: PropTypes.number.isRequired,
-    }),
+    position: PropTypes.object,
+    task: PropTypes.object,
     onAdd: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
     onEdit: PropTypes.func.isRequired,
+    onDone: PropTypes.func.isRequired,
+    onClose: PropTypes.func.isRequired,
 };
