@@ -5,11 +5,15 @@ const API_URL = "http://127.0.0.1:8000/api";
 
 export function useAuth() {
     const [points, setPoints] = useState(0);
+    const [totalPointsEarned, setTotalPointsEarned] = useState(0);
+    const [pointsSpent, setPointsSpent] = useState(0);
 
     const getProfile = async () => {
         try {
             const res = await axios.get(`${API_URL}/profile/me/`);
-            setPoints(res.data.current_points);
+            setPoints(res.data.current_points || 0);
+            setTotalPointsEarned(res.data.total_points_earned || 0);
+            setPointsSpent(res.data.points_spent || 0);
         } catch (err) {
             console.log("Profile load failed", err);
         }
@@ -29,6 +33,8 @@ export function useAuth() {
         localStorage.removeItem("access");
         localStorage.removeItem("refresh");
         setPoints(0);
+        setTotalPointsEarned(0);
+        setPointsSpent(0);
     };
 
     const getAccessToken = () => localStorage.getItem("access");
@@ -75,5 +81,8 @@ export function useAuth() {
         if (getAccessToken()) getProfile();
     }, []);
 
-    return { login, register, logout, points, getAccessToken, getProfile };
+    // Available points = current_points - points_spent
+    const availablePoints = points - pointsSpent;
+    
+    return { login, register, logout, points, totalPointsEarned, pointsSpent, availablePoints, getAccessToken, getProfile };
 }

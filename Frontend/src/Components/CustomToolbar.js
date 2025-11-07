@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
-import TaskList from "./TaskList";
 
 export const CustomToolbar = ({
     label,
@@ -9,8 +8,6 @@ export const CustomToolbar = ({
     currentView,
     setCurrentView,
 }) => {
-    const [showTaskMenu, setShowTaskMenu] = useState(false);
-    const [listMode, setListMode] = useState(null);
 
     return (
         <div
@@ -23,20 +20,7 @@ export const CustomToolbar = ({
             }}
         >
             <div>
-                <button 
-                    onClick={() => setShowTaskMenu(prev => !prev)}
-                    style={{
-                        backgroundColor: "#b8860b",
-                        color: "white",
-                        border: "none",
-                        padding: "6px 12px",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontWeight: "bold",
-                    }}
-                >
-                    Tasks ▼
-                </button>
+                {/* Tasks button removed - use Task List button instead */}
             </div>
 
             <span className="rbc-toolbar-label" style={{ fontWeight: "bold" }}>
@@ -64,48 +48,7 @@ export const CustomToolbar = ({
                     </button>
                 ))}
 
-                {showTaskMenu && (
-                    <div
-                        style={{
-                            position: "absolute",
-                            left: 0,
-                            top: "110%",
-                            backgroundColor: "#fff",
-                            border: "1px solid #ccc",
-                            borderRadius: "4px",
-                            boxShadow: "0px 2px 6px rgba(0,0,0,0.2)",
-                            zIndex: 999,
-                            width: "140px",
-                        }}
-                    >
-                        <button
-                            style={{ width: "100%", padding: "8px" }}
-                            onClick={() => {
-                                setListMode("active");
-                                setShowTaskMenu(false);
-                            }}
-                        >
-                            Active
-                        </button>
-                        <button
-                            style={{ width: "100%", padding: "8px" }}
-                            onClick={() => {
-                                setListMode("done");
-                                setShowTaskMenu(false);
-                            }}
-                        >
-                            Done
-                        </button>
-                    </div>
-                )}
             </div>
-
-            {listMode && (
-                <TaskList
-                    mode={listMode}
-                    onClose={() => setListMode(null)}
-                />
-            )}
         </div>
     );
 };

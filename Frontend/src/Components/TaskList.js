@@ -6,9 +6,10 @@ import AddTask from "./AddTask";
 import EditTask from "./EditTask";
 import DeleteTask from "./DeleteTask";
 
-export default function TaskList({ mode, onClose }) {
+export default function TaskList({ mode: initialMode = "active", onClose }) {
     const { events, doneEvents, addTask, deleteTask, editTask, markDone, createCyclicTask, createSplitTask, fetchEvents } = useTasks();
     const { getProfile } = useAuth();
+    const [currentMode, setCurrentMode] = useState(initialMode);
     const [sortBy, setSortBy] = useState("end");
     const [selectedTask, setSelectedTask] = useState(null);
     const [showAddTask, setShowAddTask] = useState(false);
@@ -18,7 +19,7 @@ export default function TaskList({ mode, onClose }) {
     const [taskToDelete, setTaskToDelete] = useState(null);
 
     // Filter out cyclic occurrences and subtasks - only show main tasks in list
-    const mainTasksOnly = (mode === "done" ? doneEvents : events).filter(
+    const mainTasksOnly = (currentMode === "done" ? doneEvents : events).filter(
         task => !task.is_cyclic_occurrence && !task.is_subtask
     );
     const filtered = mainTasksOnly;
@@ -34,10 +35,16 @@ export default function TaskList({ mode, onClose }) {
     };
 
     const handleDelete = async (taskId) => {
-        await deleteTask(taskId);
-        setShowDeleteTask(false);
-        setTaskToDelete(null);
-        await fetchEvents();
+        try {
+            await deleteTask(taskId);
+            setShowDeleteTask(false);
+            setTaskToDelete(null);
+            // Force refresh both active and done events
+            await fetchEvents();
+        } catch (error) {
+            console.error("Error deleting task:", error);
+            alert("Failed to delete task. Please try again.");
+        }
     };
 
     const handleEdit = async (data, isCyclic, isSplit, shouldMarkDone) => {
@@ -101,168 +108,116 @@ export default function TaskList({ mode, onClose }) {
             onClick={(e) => {
                 if (e.target === e.currentTarget) onClose();
             }}
-            style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: "rgba(0, 0, 0, 0.7)",
-                zIndex: 10000,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-            }}
+            className="fixed inset-0 bg-black/70 z-[10000] flex justify-center items-center"
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                style={{
-                    backgroundColor: "#2b2b2b",
-                    color: "white",
-                    padding: "20px",
-                    borderRadius: "8px",
-                    width: "80%",
-                    maxWidth: "800px",
-                    maxHeight: "90vh",
-                    overflowY: "auto",
-                    position: "relative",
-                }}
+                className="bg-gray-800 text-white p-5 rounded-lg w-4/5 max-w-[800px] max-h-[90vh] overflow-y-auto relative"
             >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                    <h2>{mode === "done" ? "Completed Tasks" : "Active Tasks"}</h2>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            backgroundColor: "red",
-                            color: "white",
-                            border: "none",
-                            padding: "8px 16px",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                        }}
-                    >
-                        ✕ Close
-                    </button>
+                <div className="flex justify-between items-center mb-5">
+                    <h2 className="text-2xl font-bold">Task List</h2>
+                    <div className="flex gap-2 items-center">
+                        <div className="flex gap-2 bg-gray-700 rounded-lg p-1">
+                            <button
+                                onClick={() => setCurrentMode("active")}
+                                className={`px-4 py-2 rounded transition-colors ${
+                                    currentMode === "active"
+                                        ? "bg-blue-600 text-white"
+                                        : "bg-transparent text-gray-300 hover:text-white"
+                                }`}
+                            >
+                                Active
+                            </button>
+                            <button
+                                onClick={() => setCurrentMode("done")}
+                                className={`px-4 py-2 rounded transition-colors ${
+                                    currentMode === "done"
+                                        ? "bg-blue-600 text-white"
+                                        : "bg-transparent text-gray-300 hover:text-white"
+                                }`}
+                            >
+                                Done
+                            </button>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="bg-red-600 text-white border-none px-4 py-2 rounded cursor-pointer hover:bg-red-700 transition-colors"
+                        >
+                            ✕ Close
+                        </button>
+                    </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
+                <div className="flex gap-2.5 mb-5 flex-wrap">
                     <button
                         onClick={() => setSortBy("end")}
-                        style={{
-                            backgroundColor: sortBy === "end" ? "#007bff" : "#444",
-                            color: "white",
-                            border: "none",
-                            padding: "8px 16px",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                        }}
+                        className={`${sortBy === "end" ? "bg-blue-600" : "bg-gray-700"} text-white border-none px-4 py-2 rounded cursor-pointer hover:opacity-90 transition-opacity`}
                     >
                         Sort by End Date
                     </button>
                     <button
                         onClick={() => setSortBy("priority")}
-                        style={{
-                            backgroundColor: sortBy === "priority" ? "#007bff" : "#444",
-                            color: "white",
-                            border: "none",
-                            padding: "8px 16px",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                        }}
+                        className={`${sortBy === "priority" ? "bg-blue-600" : "bg-gray-700"} text-white border-none px-4 py-2 rounded cursor-pointer hover:opacity-90 transition-opacity`}
                     >
                         Sort by Priority
                     </button>
-                    {mode !== "done" && (
+                    {currentMode !== "done" && (
                         <button
                             onClick={() => setShowAddTask(true)}
-                            style={{
-                                backgroundColor: "#00ff40ff",
-                                color: "black",
-                                border: "none",
-                                padding: "8px 16px",
-                                borderRadius: "4px",
-                                cursor: "pointer",
-                                fontWeight: "bold",
-                            }}
+                            className="bg-green-500 text-black border-none px-4 py-2 rounded cursor-pointer font-bold hover:bg-green-600 transition-colors"
                         >
                             ➕ Add New Task
                         </button>
                     )}
                 </div>
 
-                <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+                <div className="max-h-[60vh] overflow-y-auto">
                     {sorted.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "40px", color: "#888" }}>
-                            No {mode === "done" ? "completed" : "active"} tasks
+                        <div className="text-center py-10 text-gray-400">
+                            No {currentMode === "done" ? "completed" : "active"} tasks
                         </div>
                     ) : (
-                        sorted.map((task) => (
-                            <div
-                                key={task.task_id}
-                                style={{
-                                    border: "1px solid #444",
-                                    padding: "12px",
-                                    borderRadius: "6px",
-                                    margin: "8px 0",
-                                    backgroundColor: "#333",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    opacity: task.status === "done" ? 0.5 : 1,
-                                    filter: task.status === "done" ? "blur(1px)" : "none",
-                                }}
-                                onClick={() => handleTaskClick(task)}
-                            >
-                                <div style={{ flex: 1 }}>
-                                    <b style={{ fontSize: "16px" }}>{task.title}</b>
-                                    <div style={{ marginTop: "4px", fontSize: "12px", color: "#aaa" }}>
-                                        Priority: {task.priority} | Points: {task.points || 0} | End: {task.end.toLocaleDateString()} | Status: {task.status}
+                        sorted.map((task) => {
+                            return (
+                                <div
+                                    key={task.task_id}
+                                    className="border border-gray-600 p-3 rounded-md my-2 bg-gray-700 cursor-pointer flex justify-between items-center hover:bg-gray-600 transition-colors"
+                                    onClick={() => handleTaskClick(task)}
+                                >
+                                    <div className="flex-1">
+                                        <b className="text-base text-white">
+                                            {task.title}
+                                        </b>
+                                        <div className="mt-1 text-xs text-gray-300">
+                                            Priority: {task.priority} | Points: {task.points || 0} | End: {task.end.toLocaleDateString()} | Status: {task.status}
+                                        </div>
                                     </div>
-                                </div>
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                    {mode !== "done" && (
-                                        <>
+                                    <div className="flex gap-2">
+                                        {currentMode !== "done" && (
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleMarkDone(task.task_id);
                                                 }}
-                                                style={{
-                                                    backgroundColor: "#00ff22",
-                                                    color: "black",
-                                                    border: "none",
-                                                    padding: "6px 12px",
-                                                    borderRadius: "4px",
-                                                    cursor: "pointer",
-                                                    fontSize: "12px",
-                                                }}
+                                                className="bg-green-500 text-black border-none px-3 py-1.5 rounded cursor-pointer text-xs hover:bg-green-600 transition-colors"
                                             >
                                                 ✓ Done
                                             </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setTaskToDelete(task);
-                                                    setShowDeleteTask(true);
-                                                }}
-                                                style={{
-                                                    backgroundColor: "#ff4444",
-                                                    color: "white",
-                                                    border: "none",
-                                                    padding: "6px 12px",
-                                                    borderRadius: "4px",
-                                                    cursor: "pointer",
-                                                    fontSize: "12px",
-                                                }}
-                                            >
-                                                ✕ Delete
-                                            </button>
-                                        </>
-                                    )}
+                                        )}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setTaskToDelete(task);
+                                                setShowDeleteTask(true);
+                                            }}
+                                            className="bg-red-600 text-white border-none px-3 py-1.5 rounded cursor-pointer text-xs hover:bg-red-700 transition-colors"
+                                        >
+                                            ✕ Delete
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
 

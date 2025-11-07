@@ -28,6 +28,7 @@ export default function AddTask({ onSubmit, onClose, defaultValues }) {
         { title: "", start_date: "", end_date: "", priority: 1 },
         { title: "", start_date: "", end_date: "", priority: 1 }
     ]);
+    
     const handleSubmit = (event) => {
         event.preventDefault();
         const taskData = {
@@ -66,225 +67,168 @@ export default function AddTask({ onSubmit, onClose, defaultValues }) {
     return (
         <div
             onClick={(e) => e.stopPropagation()}
-            style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                backgroundColor: "#2b2b2b",
-                color: "white",
-                padding: "20px",
-                borderRadius: "8px",
-                zIndex: 10000,
-                width: "400px",
-                maxWidth: "90vw",
-                maxHeight: "90vh",
-                overflowY: "auto",
-            }}
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800 text-white p-5 rounded-lg z-[10000] w-[500px] max-w-[90vw] max-h-[90vh] overflow-y-auto"
         >
-            <h3>Create Task</h3>
-            <form onSubmit={handleSubmit}>
+            <h3 className="text-white text-xl font-bold mb-4">Create Task</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label>Title:</label>
-                    <br />
+                    <label className="text-white text-sm font-medium block mb-1">Title:</label>
                     <input
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         required
-                        style={{ width: "100%" }}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
                     />
                 </div>
 
                 <div>
-                    <label>Description:</label>
-                    <br />
+                    <label className="text-white text-sm font-medium block mb-1">Description:</label>
                     <textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        style={{ width: "100%" }}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500 min-h-[80px]"
                     />
                 </div>
 
                 <div>
-                    <label>Priority: {priority}</label>
-                    <br />
+                    <label className="text-white text-sm font-medium block mb-1">Priority: {priority}</label>
                     <input
                         type="range"
                         min="1"
                         max="10"
                         value={priority}
                         onChange={(e) => setPriority(e.target.value)}
-                        style={{ width: "100%" }}
+                        className="w-full"
                     />
                 </div>
+                
                 <div>
-                    <label>Estimated Points: {
+                    <label className="text-white text-sm font-medium block mb-1">Estimated Points: {
                         (() => {
-                            const hours = 1; // Default hours
                             const days = start_date && end_date 
                                 ? Math.max(1, Math.ceil((new Date(end_date) - new Date(start_date)) / (1000 * 60 * 60 * 24)))
                                 : 1;
-                            const calculated = Number(priority) * hours * days;
-                            return calculated;
+                            return Number(priority) * days * 10;
                         })()
                     }</label>
-                    <div style={{ fontSize: "12px", color: "#aaa", marginTop: "4px" }}>
-                        (Calculated: Priority × Hours × Days)
+                    <div className="text-xs text-gray-400 mt-1">
+                        (Calculated: (End Date - Start Date) × Priority × 10)
                     </div>
                 </div>
 
                 <div>
-                    <label>Start Date:</label>
-                    <br />
+                    <label className="text-white text-sm font-medium block mb-1">Start Date:</label>
                     <input
                         type="datetime-local"
                         value={start_date}
                         onChange={(e) => setStartDate(e.target.value)}
-                        style={{ width: "100%" }}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
                     />
                 </div>
 
                 <div>
-                    <label>End Date:</label>
-                    <br />
+                    <label className="text-white text-sm font-medium block mb-1">End Date:</label>
                     <input
                         type="datetime-local"
                         value={end_date}
                         onChange={(e) => setEndDate(e.target.value)}
-                        style={{ width: "100%" }}
                         required
-                    />
-                </div>
-
-                <hr />
-                <label>Work Session (Optional):</label>
-                <div style={{ display: "flex", gap: "10px" }}>
-                    <input
-                        type="time"
-                        value={start_time}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        style={{ flex: 1 }}
-                        placeholder="Start"
-                    />
-                    <input
-                        type="time"
-                        value={end_time}
-                        onChange={(e) => setEndTime(e.target.value)}
-                        style={{ flex: 1 }}
-                        placeholder="End"
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
                     />
                 </div>
 
                 <div>
-                    <label>Status:</label>
-                    <br />
+                    <label className="text-white text-sm font-medium block mb-1">Work Session (Optional):</label>
+                    <div className="flex gap-2">
+                        <input
+                            type="time"
+                            value={start_time}
+                            onChange={(e) => setStartTime(e.target.value)}
+                            placeholder="Start"
+                            className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
+                        />
+                        <input
+                            type="time"
+                            value={end_time}
+                            onChange={(e) => setEndTime(e.target.value)}
+                            placeholder="End"
+                            className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="text-white text-sm font-medium block mb-1">Status:</label>
                     <select
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
-                        style={{ width: "100%" }}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
                     >
-                        <option value="pending">Pending</option>
-                        <option value="in progress">In Progress</option>
-                        <option value="done">Done</option>
-                        <option value="abandoned">Abandoned</option>
-                        <option value="overdue">Overdue</option>
+                        <option value="pending" className="bg-gray-700">Pending</option>
+                        <option value="in progress" className="bg-gray-700">In Progress</option>
+                        <option value="completed" className="bg-gray-700">Completed</option>
+                        <option value="done" className="bg-gray-700">Done</option>
+                        <option value="abandoned" className="bg-gray-700">Abandoned</option>
+                        <option value="overdue" className="bg-gray-700">Overdue</option>
                     </select>
                 </div>
 
-                <div
-                    style={{
-                        marginTop: "10px",
-                        display: "flex",
-                        justifyContent: "space-between",
-                    }}
-                >
+                <hr className="my-4 border-gray-600" />
+                
+                <div className="flex justify-between gap-4 mb-4">
                     <button
-                        type="submit"
-                        style={{
-                            backgroundColor: "#00ff40ff",
-                            color: "black",
-                            border: "none",
-                            padding: "5px 10px",
-                            borderRadius: "4px",
-                        }}
+                        type="button"
+                        onClick={() => setIsCyclic(!isCyclic)}
+                        className={`px-4 py-2 rounded transition-colors ${
+                            isCyclic 
+                                ? "bg-green-500 text-black" 
+                                : "bg-gray-700 text-white hover:bg-gray-600"
+                        }`}
                     >
-                        Add
+                        🔁 {isCyclic ? "Remove Cyclic" : "Make Cyclic"}
                     </button>
                     <button
                         type="button"
-                        onClick={handleCancel}
-                        style={{
-                            backgroundColor: "red",
-                            color: "black",
-                            border: "none",
-                            padding: "5px 10px",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                        }}
+                        onClick={() => setIsSplit(!isSplit)}
+                        className={`px-4 py-2 rounded transition-colors ${
+                            isSplit 
+                                ? "bg-green-500 text-black" 
+                                : "bg-gray-700 text-white hover:bg-gray-600"
+                        }`}
                     >
-                        Cancel
+                        ➕ {isSplit ? "Remove Split" : "Split Task"}
                     </button>
                 </div>
-            </form>
 
-            <hr />
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button
-                    type="button"
-                    onClick={() => setIsCyclic(!isCyclic)}
-                    style={{
-                        backgroundColor: isCyclic ? "#00ff40ff" : "#444",
-                        color: isCyclic ? "black" : "white",
-                        padding: "4px 8px",
-                        borderRadius: "4px",
-                        border: "1px solid #666",
-                    }}
-                >
-                🔁 {isCyclic ? "Remove Cyclic" : "Make Cyclic"}
-                </button>
                 {isCyclic && (
-                    <div style={{ marginTop: "10px" }}>
-                        <label>Frequency:</label>
-                        <br />
+                    <div className="mb-4">
+                        <label className="text-white text-sm font-medium block mb-1">Frequency:</label>
                         <select
                             value={frequency}
                             onChange={(e) => setFrequency(e.target.value)}
-                            style={{ width: "100%", marginTop: "4px" }}
+                            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
                         >
-                            <option value="daily">Daily</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly">Monthly</option>
-                            <option value="quarterly">Quarterly</option>
+                            <option value="daily" className="bg-gray-700">Daily</option>
+                            <option value="weekly" className="bg-gray-700">Weekly</option>
+                            <option value="monthly" className="bg-gray-700">Monthly</option>
+                            <option value="quarterly" className="bg-gray-700">Quarterly</option>
                         </select>
-                        <br />
-                        <label style={{ marginTop: "8px", display: "block" }}>Number of Occurrences: {occurrencesCount}</label>
+                        <label className="text-white text-sm font-medium block mt-3 mb-1">Number of Occurrences: {occurrencesCount}</label>
                         <input
                             type="range"
                             min="2"
                             max="12"
                             value={occurrencesCount}
                             onChange={(e) => setOccurrencesCount(parseInt(e.target.value))}
-                            style={{ width: "100%", marginTop: "4px" }}
+                            className="w-full"
                         />
                     </div>
                 )}
-                <button
-                    type="button"
-                    onClick={() => setIsSplit(!isSplit)}
-                    style={{
-                        backgroundColor: isSplit ? "#00ff40ff" : "#444",
-                        color: isSplit ? "black" : "white",
-                        padding: "4px 8px",
-                        borderRadius: "4px",
-                        border: "1px solid #666",
-                    }}
-                >
-                ➕ {isSplit ? "Remove Split" : "Split Task"}
-                </button>
+
                 {isSplit && (
-                    <div style={{ marginTop: "10px", border: "1px solid #666", padding: "10px", borderRadius: "4px" }}>
-                        <label>Number of Splits:</label>
+                    <div className="mb-4 border border-gray-600 p-4 rounded-lg">
+                        <label className="text-white text-sm font-medium block mb-2">Number of Splits:</label>
                         <input
                             type="number"
                             min="2"
@@ -297,11 +241,11 @@ export default function AddTask({ onSubmit, onClose, defaultValues }) {
                                     splits[i] || { title: "", start_date: "", end_date: "", priority: 1 }
                                 ));
                             }}
-                            style={{ width: "60px", marginLeft: "10px" }}
+                            className="w-20 px-2 py-1 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
                         />
                         {splits.map((split, index) => (
-                            <div key={index} style={{ marginTop: "10px", padding: "8px", backgroundColor: "#333", borderRadius: "4px" }}>
-                                <b>Subtask {index + 1}</b>
+                            <div key={index} className="mt-3 p-3 bg-gray-800 rounded-lg">
+                                <b className="text-white text-sm font-medium block mb-2">Subtask {index + 1}</b>
                                 <input
                                     type="text"
                                     placeholder="Subtask title"
@@ -311,9 +255,9 @@ export default function AddTask({ onSubmit, onClose, defaultValues }) {
                                         newSplits[index].title = e.target.value;
                                         setSplits(newSplits);
                                     }}
-                                    style={{ width: "100%", marginTop: "4px" }}
+                                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500 mb-2"
                                 />
-                                <div style={{ display: "flex", gap: "5px", marginTop: "4px" }}>
+                                <div className="flex gap-2 mb-2">
                                     <input
                                         type="datetime-local"
                                         placeholder="Start"
@@ -323,7 +267,7 @@ export default function AddTask({ onSubmit, onClose, defaultValues }) {
                                             newSplits[index].start_date = e.target.value;
                                             setSplits(newSplits);
                                         }}
-                                        style={{ flex: 1 }}
+                                        className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
                                     />
                                     <input
                                         type="datetime-local"
@@ -334,9 +278,10 @@ export default function AddTask({ onSubmit, onClose, defaultValues }) {
                                             newSplits[index].end_date = e.target.value;
                                             setSplits(newSplits);
                                         }}
-                                        style={{ flex: 1 }}
+                                        className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
                                     />
                                 </div>
+                                <label className="text-white text-sm font-medium block mb-1">Priority: {split.priority}</label>
                                 <input
                                     type="range"
                                     min="1"
@@ -347,14 +292,29 @@ export default function AddTask({ onSubmit, onClose, defaultValues }) {
                                         newSplits[index].priority = e.target.value;
                                         setSplits(newSplits);
                                     }}
-                                    style={{ width: "100%", marginTop: "4px" }}
+                                    className="w-full"
                                 />
-                                <label>Priority: {split.priority}</label>
                             </div>
                         ))}
                     </div>
                 )}
-            </div>
+
+                <div className="mt-6 flex justify-between gap-4">
+                    <button
+                        type="submit"
+                        className="bg-green-600 hover:bg-green-700 text-white border-none px-4 py-2 rounded transition-colors"
+                    >
+                        Add
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="bg-red-600 hover:bg-red-700 text-white border-none px-4 py-2 rounded transition-colors"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
         </div>
     );
 }

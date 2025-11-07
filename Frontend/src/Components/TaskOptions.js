@@ -9,38 +9,18 @@ export default function TaskOptions({position, task, onAdd, onDelete, onEdit, on
     return (
         <div
             onClick={stop}
-            style={{
-                position: "absolute",
-                top: position.y,
-                left: position.x,
-                backgroundColor: "#2b2b2b",
-                color: "white",
-                borderRadius: "8px",
-                padding: "10px",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-                zIndex: 1000,
-                width: "150px",
-            }}
+            className="absolute bg-gray-800 text-white rounded-lg p-2.5 shadow-lg z-[1000] w-[150px]"
+            style={{ top: position.y, left: position.x }}
         >
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <button style={buttonStyle} onClick={() => { onAdd(); onClose(); }}>➕ Add Task</button>
-                <button style={buttonStyle} onClick={() => { onEdit(task); onClose(); }}>✏️ Edit</button>
-                <button style={buttonStyle} onClick={() => { onDelete(task); onClose(); }}>❌ Delete</button>
-                <button style={buttonStyle} onClick={() => { if (task && task.task_id) { onDone(task.task_id); } onClose(); }}>✅ Mark Done</button>
+            <div className="flex flex-col gap-1.5">
+                <button className="bg-gray-700 text-white border-none rounded px-2.5 py-1 cursor-pointer text-left hover:bg-gray-600 transition-colors" onClick={() => { onAdd(); onClose(); }}>➕ Add Task</button>
+                <button className="bg-gray-700 text-white border-none rounded px-2.5 py-1 cursor-pointer text-left hover:bg-gray-600 transition-colors" onClick={() => { onEdit(task); onClose(); }}>✏️ Edit</button>
+                <button className="bg-gray-700 text-white border-none rounded px-2.5 py-1 cursor-pointer text-left hover:bg-gray-600 transition-colors" onClick={() => { onDelete(task); onClose(); }}>❌ Delete</button>
+                <button className="bg-gray-700 text-white border-none rounded px-2.5 py-1 cursor-pointer text-left hover:bg-gray-600 transition-colors" onClick={() => { if (task && task.task_id) { onDone(task.task_id); } onClose(); }}>✅ Mark Done</button>
             </div>
         </div>
     );
 }
-
-const buttonStyle = {
-    backgroundColor: "#444",
-    color: "white",
-    border: "none",
-    borderRadius: "4px",
-    padding: "5px",
-    cursor: "pointer",
-    textAlign: "left",
-};
 
 TaskOptions.propTypes = {
     position: PropTypes.object,

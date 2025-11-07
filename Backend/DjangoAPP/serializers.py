@@ -60,4 +60,4 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'current_points']
+        fields = ['id', 'username', 'current_points', 'total_points_earned', 'points_spent']

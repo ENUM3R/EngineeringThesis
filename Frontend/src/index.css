@@ -1,13 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --user-font: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --user-background-color: transparent;
+  --status-color-pending: #fda80bb6;
+  --status-color-in-progress: #b007ffff;
+  --status-color-completed: #14fff3ff;
+  --status-color-overdue: #f70073;
+  --status-color-done: #00ff22;
+  --status-color-abandoned: #888888;
+}
+
 body {
   margin: 0;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-family: var(--user-font);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--user-background-color);
 }
 
 code {
   font-family:
     source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/* Apply user background to main containers when set */
+.min-h-screen[style*="background-color"] {
+  background: var(--user-background-color) !important;
+  background-image: none !important;
 }

@@ -69,7 +69,9 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         # Get or create profile
         profile, created = UserProfile.objects.get_or_create(user=task.user)
+        # Update both current_points (available) and total_points_earned (all-time)
         profile.current_points += points_to_add
+        profile.total_points_earned += points_to_add
         profile.save()
 
         return Response({
@@ -193,5 +195,23 @@ class ProfileViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def me(self, request) -> Response:
         profile, created = UserProfile.objects.get_or_create(user=request.user)
+        serializer = UserProfileSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['patch'])
+    def update_points(self, request) -> Response:
+        points_to_deduct = request.data.get('points_to_deduct', 0)
+        if points_to_deduct < 0:
+            return Response({"error": "Points to deduct must be positive"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        # Check available points (current_points - points_spent)
+        available_points = profile.current_points - profile.points_spent
+        if available_points < points_to_deduct:
+            return Response({"error": "Not enough points"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Only track spending, don't decrease current_points
+        profile.points_spent += points_to_deduct
+        profile.save()
         serializer = UserProfileSerializer(profile)
         return Response(serializer.data, status=status.HTTP_200_OK)

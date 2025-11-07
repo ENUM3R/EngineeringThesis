@@ -9,6 +9,7 @@ import "./themes.css"
 //Hooks
 import useTasks from "./Hooks/useTasks";
 import { useAuth } from "./Hooks/useAuth";
+import { useUserPreferences } from "./Context/UserPreferencesContext";
 
 // Components
 import { CustomToolbar } from "./Components/CustomToolbar";
@@ -55,7 +56,8 @@ export default function CalendarPage() {
     const [taskListMode, setTaskListMode] = useState(null);
 
     const { events, doneEvents, addTask, deleteTask, editTask, markDone, fetchEvents, createCyclicTask, createSplitTask } = useTasks();
-    const { points, getProfile } = useAuth();
+    const { availablePoints, getProfile } = useAuth();
+    const { statusColors } = useUserPreferences();
 
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
@@ -86,110 +88,62 @@ export default function CalendarPage() {
 
     return (
         <div
-            className="calendar-container"
-            style={{
-                height: 600,
-                margin: "50px",
-                padding: "10px",
-                borderRadius: "8px",
-                position: "relative",
-            }}
+            className="calendar-container h-[600px] m-[50px] p-2.5 rounded-lg relative"
         >
 
-            <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "10px",
-                padding: "0 10px"
-            }}>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                    <div style={{
-                        background: "#222",
-                        color: "white",
-                        padding: "6px 14px",
-                        borderRadius: "6px",
-                        fontWeight: "bold",
-                    }}>
-                        POINTS: {points}
+            <div className="flex justify-between items-center mb-2.5 px-2.5">
+                <div className="flex gap-2.5 items-center">
+                    <div className="bg-gray-800 text-white px-3.5 py-1.5 rounded-md font-bold">
+                        POINTS: {availablePoints}
                     </div>
                     <button
                         onClick={() => {
-                            // Placeholder for future marketplace
-                            alert("Marketplace coming soon!");
+                            window.location.href = "/marketplace";
                         }}
-                        style={{
-                            background: "#4a148c",
-                            color: "white",
-                            padding: "6px 14px",
-                            borderRadius: "6px",
-                            fontWeight: "bold",
-                            border: "none",
-                            cursor: "pointer",
-                        }}
+                        className="bg-purple-900 text-white px-3.5 py-1.5 rounded-md font-bold border-none cursor-pointer hover:bg-purple-800 transition-colors"
                     >
                         🛒 Marketplace
                     </button>
+                    <button
+                        onClick={() => {
+                            window.location.href = "/reports";
+                        }}
+                        className="bg-blue-600 text-white px-3.5 py-1.5 rounded-md font-bold border-none cursor-pointer hover:bg-blue-700 transition-colors"
+                    >
+                        📊 Reports
+                    </button>
                 </div>
 
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div className="flex gap-2.5">
                     <button
                         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        style={{
-                            backgroundColor: theme === "dark" ? "#1e34f5ff" : "#333",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "4px",
-                            padding: "6px 12px",
-                            cursor: "pointer",
-                        }}
+                        className={`${theme === "dark" ? "bg-blue-600" : "bg-gray-700"} text-white border-none rounded px-3 py-1.5 cursor-pointer hover:opacity-90 transition-opacity`}
                     >
                         Switch to {theme === "dark" ? "Light" : "Dark"} Mode
                     </button>
 
                     <button
                         onClick={() => setTriggerRefresh(!triggerRefresh)}
-                        style={{
-                            backgroundColor: "#008cff",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "4px",
-                            padding: "6px 12px",
-                            cursor: "pointer",
-                        }}
+                        className="bg-blue-500 text-white border-none rounded px-3 py-1.5 cursor-pointer hover:bg-blue-600 transition-colors"
                     >
                         Refresh
                     </button>
                 </div>
             </div>
 
-            <div style={{
-                display: "flex",
-                gap: "10px",
-                marginBottom: "12px",
-                padding: "0 10px"
-            }}>
+            <div className="flex gap-2.5 mb-3 px-2.5">
                 <input
                     type="text"
                     placeholder="Search task..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{
-                        padding: "6px 8px",
-                        borderRadius: "4px",
-                        border: "1px solid #777",
-                        width: "200px"
-                    }}
+                    className="px-2 py-1.5 rounded border border-gray-600 w-[200px] bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                 />
 
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    style={{
-                        padding: "6px 8px",
-                        borderRadius: "4px",
-                        border: "1px solid #777",
-                    }}
+                    className="px-2 py-1.5 rounded border border-gray-600 bg-gray-800 text-white focus:outline-none focus:border-blue-500"
                 >
                     <option value="all">All</option>
                     <option value="pending">Pending</option>
@@ -201,16 +155,9 @@ export default function CalendarPage() {
 
                 <button
                     onClick={() => setTaskListMode("active")}
-                    style={{
-                        backgroundColor: "#00b52e",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        padding: "6px 12px",
-                        cursor: "pointer"
-                    }}
+                    className="bg-green-600 text-white border-none rounded px-3 py-1.5 cursor-pointer hover:bg-green-700 transition-colors"
                 >
-                    Open Task List
+                    📋 Task List
                 </button>
             </div>
 
@@ -222,10 +169,7 @@ export default function CalendarPage() {
                 selectable
                 onSelectSlot={handleSelectSlot}
                 onSelectEvent={handleSelectEvent}
-                style={{
-                    height: 550,
-                    borderRadius: "8px",
-                }}
+                className="h-[550px] rounded-lg"
                 views={{
                     month: true,
                     week: true,
@@ -242,7 +186,6 @@ export default function CalendarPage() {
                             {...props}
                             currentView={currentView}
                             setCurrentView={setCurrentView}
-                            onOpenTaskList={setTaskListMode}
                         />
                     ),
                 }}
@@ -258,21 +201,34 @@ export default function CalendarPage() {
                     let opacity = 1;
                     let filter = "none";
                     
-                    switch (event.status){
-                    case "pending": backgroundColor = "#fda80bb6"; break;
-                    case "in progress": backgroundColor = "#b007ffff"; break;
-                    case "completed": backgroundColor = "#14fff3ff"; break;
-                    case "overdue": backgroundColor = "#f70073"; break;
-                    case "done": 
-                        backgroundColor = "#00ff22"; 
-                        opacity = 0.8;
-                        filter = "blur(1px)";
-                        break;
-                    case "abandoned":
-                        backgroundColor = "#888888";
-                        opacity = 0.8;
-                        filter = "blur(1px)";
-                        break;
+                    // Use custom status colors if available, otherwise use defaults
+                    // Handle "in progress" status with space or hyphen
+                    const statusKey = event.status === "in progress" ? "in progress" : event.status;
+                    const statusKeyHyphen = event.status === "in progress" ? "in-progress" : event.status;
+                    
+                    if (statusColors[statusKey] || statusColors[statusKeyHyphen]) {
+                        backgroundColor = statusColors[statusKey] || statusColors[statusKeyHyphen];
+                    } else {
+                        switch (event.status){
+                        case "pending": backgroundColor = "#fda80bb6"; break;
+                        case "in progress": backgroundColor = "#b007ffff"; break;
+                        case "completed": backgroundColor = "#14fff3ff"; break;
+                        case "overdue": 
+                            backgroundColor = "#f70073"; 
+                            opacity = 1;
+                            filter = "none";
+                            break;
+                        case "done": 
+                            backgroundColor = "#00ff22"; 
+                            opacity = 1;
+                            filter = "none";
+                            break;
+                        case "abandoned":
+                            backgroundColor = "#888888";
+                            opacity = 1;
+                            filter = "none";
+                            break;
+                        }
                     }
                     return { 
                         style: { 
@@ -352,8 +308,15 @@ export default function CalendarPage() {
                 <DeleteTask
                     task={taskToDelete}
                     onDelete={async (task_id) => {
-                        await deleteTask(task_id);
-                        setTaskToDelete(null);
+                        try {
+                            await deleteTask(task_id);
+                            setTaskToDelete(null);
+                            await fetchEvents(); // Refresh calendar
+                            await getProfile(); // Refresh points
+                        } catch (error) {
+                            console.error("Error deleting task:", error);
+                            alert("Failed to delete task. Please try again.");
+                        }
                     }}
                     onClose={() => setTaskToDelete(null)}
                 />

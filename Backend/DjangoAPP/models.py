@@ -37,7 +37,15 @@ class Task(models.Model):
         return 1
     
     def calculate_points(self) -> int:
-        points: int =  self.priority * self.total_hours* self.day_span
+        # New formula: (end_date.day - start_date.day) * priority * 10
+        if self.start_date and self.end_date:
+            day_diff = (self.end_date.date() - self.start_date.date()).days
+            if day_diff <= 0:
+                day_diff = 1  # Minimum 1 day
+            points: int = day_diff * self.priority * 10
+        else:
+            # Fallback if dates are missing
+            points: int = self.priority * 10
         self.points = int(points)
         self.save()
         return self.points
@@ -69,7 +77,9 @@ class SubTask(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    current_points: int = models.IntegerField(default=0)
+    current_points: int = models.IntegerField(default=0)  # Available points (can be spent)
+    total_points_earned: int = models.IntegerField(default=0)  # All points ever earned (only increases)
+    points_spent: int = models.IntegerField(default=0)  # Total points spent in marketplace
 
     def __str__(self) -> str:
         return f"{self.user.username} Profile"
