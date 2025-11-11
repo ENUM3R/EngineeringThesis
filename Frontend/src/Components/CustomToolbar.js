@@ -20,7 +20,6 @@ export const CustomToolbar = ({
             }}
         >
             <div>
-                {/* Tasks button removed - use Task List button instead */}
             </div>
 
             <span className="rbc-toolbar-label" style={{ fontWeight: "bold" }}>

@@ -45,10 +45,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields: list[str] = ['username', 'email', 'password']
 
-    def create(self, validated_data):
-        user = User.objects.create_user(
+    def create(self, validated_data) -> User:
+        user: User = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password']
@@ -56,8 +56,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
+    username: str = serializers.CharField(source='user.username', read_only=True)
     
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'current_points', 'total_points_earned', 'points_spent']
+        fields: list[str] = ['id', 'username', 'current_points', 'total_points_earned', 'points_spent']

@@ -17,28 +17,23 @@ export default function useTasks() {
         const events = [];
         
         data.forEach((event) => {
-            // Add main task
             const endDate = new Date(event.end_date);
             endDate.setHours(0, 0, 0, 0);
             const endOfDay = new Date(endDate);
             endOfDay.setHours(23, 59, 59, 999);
             
-            // Check if task is overdue
             const now = new Date();
             const isOverdue = event.end_date && new Date(event.end_date) < now && event.status !== "done" && event.status !== "abandoned";
             let finalStatus = isOverdue ? "overdue" : event.status;
             
-            // Abandoned tasks are treated as done for display purposes
             if (event.status === "abandoned") {
-                finalStatus = "abandoned"; // Keep status as abandoned
+                finalStatus = "abandoned";
             }
             
-            // Add * symbol if task has subtasks
             const titleWithSubtask = (event.subtasks && event.subtasks.length > 0) 
                 ? `* ${event.title}` 
                 : event.title;
             
-            // Calculate points for display
             const calculatedPoints = event.points || (Number(event.priority) || 0) * 1 * 1; // priority * hours * days (default)
             
             const mainEvent = {
@@ -53,13 +48,11 @@ export default function useTasks() {
                 is_cyclic: event.is_cyclic || false,
                 frequency: event.cycle?.frequency || null,
                 subtasks: event.subtasks || [],
-                occurrences_count: event.cycle?.occurrences_count || 12, // Default 12
+                occurrences_count: event.cycle?.occurrences_count || 12,
             };
-            
-            // Only add main task once (not duplicated)
+        
             events.push(mainEvent);
             
-            // If cyclic, generate occurrences
             if (event.is_cyclic && event.cycle) {
                 const frequency = event.cycle.frequency;
                 const occurrencesCount = event.cycle.occurrences_count || 12;
@@ -73,7 +66,7 @@ export default function useTasks() {
                     occEndOfDay.setHours(23, 59, 59, 999);
                     
                     events.push({
-                        task_id: event.id, // Use parent task ID for marking done
+                        task_id: event.id,
                         id: `${event.id}_cyclic_${index}`,
                         title: `${event.title} (${frequency})`,
                         start: occEndDate,
@@ -87,7 +80,6 @@ export default function useTasks() {
                 });
             }
             
-            // Add subtasks
             if (event.subtasks && event.subtasks.length > 0) {
                 event.subtasks.forEach((subtask, index) => {
                     const subtaskEndDate = new Date(subtask.end_date);
@@ -96,7 +88,7 @@ export default function useTasks() {
                     subtaskEndOfDay.setHours(23, 59, 59, 999);
                     
                     events.push({
-                        task_id: event.id, // Use parent task ID, not subtask ID
+                        task_id: event.id,
                         id: `subtask_${subtask.id}`,
                         title: `→ ${subtask.title}`,
                         start: subtaskEndDate,
@@ -135,7 +127,7 @@ export default function useTasks() {
                 newDate.setMonth(newDate.getMonth() + (i * 3));
                 break;
             default:
-                newDate.setDate(newDate.getDate() + (i * 7)); // Default to weekly
+                newDate.setDate(newDate.getDate() + (i * 7));
             }
             
             occurrences.push(newDate);
@@ -146,10 +138,8 @@ export default function useTasks() {
 
     const fetchEvents = async () => {
         try {
-            // Fetch active tasks
             const res = await axios.get(API_URL, authHeader());
             const all = formatTasks(res.data);
-            // Filter out done and abandoned tasks from active (also filter out cyclic occurrences and subtasks)
             setEvents(all.filter(t => 
                 t.status !== "done" && 
                 t.status !== "abandoned" && 
@@ -157,10 +147,8 @@ export default function useTasks() {
                 !t.is_subtask
             ));
             
-            // Fetch done tasks separately
             const doneRes = await axios.get(`${API_URL}?status=done`, authHeader());
             const doneAll = formatTasks(doneRes.data);
-            // Include both done and abandoned (but not cyclic occurrences or subtasks)
             setDoneEvents(doneAll.filter(t => 
                 (t.status === "done" || t.status === "abandoned") &&
                 !t.is_cyclic_occurrence &&

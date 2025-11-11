@@ -59,10 +59,8 @@ export default function EditTask({ task, onSubmit, onClose }) {
             }));
         }
         
-        // If status is set to "done" or "abandoned", mark task as done and add points
-        // Abandoned tasks give 0 points, done tasks give full/half points
         if (status === "done" || status === "abandoned") {
-            onSubmit(taskData, isCyclic, isSplit, true); // Pass true to indicate should mark done
+            onSubmit(taskData, isCyclic, isSplit, true);
         } else {
             onSubmit(taskData, isCyclic, isSplit, false);
         }

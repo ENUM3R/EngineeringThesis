@@ -65,7 +65,7 @@ export default function CalendarPage() {
 
     useEffect(() => {
         fetchEvents();
-        getProfile(); // Refresh points on mount and refresh
+        getProfile();
     }, [triggerRefresh]);
 
     const handleSelectSlot = (slotInfo) => {
@@ -76,8 +76,6 @@ export default function CalendarPage() {
     const handleSelectEvent = (event) => {
         setTaskToEdit(event);
     };
-
-    // Include done tasks in calendar but with blur effect
     const allEvents = [...events, ...doneEvents];
     
     const filteredEvents = allEvents.filter((e) => {
@@ -200,9 +198,7 @@ export default function CalendarPage() {
                     let backgroundColor = "#777";
                     let opacity = 1;
                     let filter = "none";
-                    
-                    // Use custom status colors if available, otherwise use defaults
-                    // Handle "in progress" status with space or hyphen
+
                     const statusKey = event.status === "in progress" ? "in progress" : event.status;
                     const statusKeyHyphen = event.status === "in progress" ? "in-progress" : event.status;
                     
@@ -275,8 +271,8 @@ export default function CalendarPage() {
                         if (taskId) {
                             try {
                                 await markDone(taskId);
-                                await getProfile(); // Refresh points display
-                                await fetchEvents(); // Refresh calendar
+                                await getProfile();
+                                await fetchEvents();
                             } catch (err) {
                                 console.error("Error marking task as done:", err);
                                 alert("Error marking task as done. Please try again.");
@@ -311,8 +307,8 @@ export default function CalendarPage() {
                         try {
                             await deleteTask(task_id);
                             setTaskToDelete(null);
-                            await fetchEvents(); // Refresh calendar
-                            await getProfile(); // Refresh points
+                            await fetchEvents();
+                            await getProfile();
                         } catch (error) {
                             console.error("Error deleting task:", error);
                             alert("Failed to delete task. Please try again.");
@@ -327,7 +323,6 @@ export default function CalendarPage() {
                     task={taskToEdit}
                     onSubmit={async (data, isCyclic, isSplit, shouldMarkDone) => {
                         await editTask(data);
-                        // If status is "done" or "abandoned", mark task as done to add points
                         if (shouldMarkDone && (data.status === "done" || data.status === "abandoned")) {
                             try {
                                 await markDone(data.task_id);

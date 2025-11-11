@@ -36,7 +36,6 @@ export default function LoginPage() {
         <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
             <div className="w-full max-w-md shadow-2xl border border-slate-700 bg-slate-800 rounded-lg">
                 <div className="p-8">
-                    {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-white mb-2">
                             {isRegister ? "Create Account" : "Welcome Back"}
@@ -46,9 +45,7 @@ export default function LoginPage() {
                         </p>
                     </div>
 
-                    {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Username Input */}
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-300">Username</label>
                             <input
@@ -61,7 +58,6 @@ export default function LoginPage() {
                             />
                         </div>
 
-                        {/* Email Input (Register only) */}
                         {isRegister && (
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-slate-300">Email Address</label>
@@ -75,8 +71,6 @@ export default function LoginPage() {
                                 />
                             </div>
                         )}
-
-                        {/* Password Input */}
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-300">Password</label>
                             <input
@@ -89,7 +83,6 @@ export default function LoginPage() {
                             />
                         </div>
 
-                        {/* Confirm Password Input (Register only) */}
                         {isRegister && (
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-slate-300">Confirm Password</label>
@@ -104,7 +97,6 @@ export default function LoginPage() {
                             </div>
                         )}
 
-                        {/* Submit Button */}
                         <button
                             type="submit"
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 mt-6 rounded transition-colors"
@@ -112,8 +104,6 @@ export default function LoginPage() {
                             {isRegister ? "Register" : "Login"}
                         </button>
                     </form>
-
-                    {/* Toggle between Login and Register */}
                     <div className="mt-6 text-center">
                         <p className="text-slate-400 text-sm">
                             {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}

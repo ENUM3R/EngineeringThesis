@@ -19,7 +19,6 @@ export default function MarketplacePage() {
     });
     const [showOwned, setShowOwned] = useState(false);
 
-    // Fetch points on mount and when points change
     useEffect(() => {
         getProfile();
     }, [getProfile]);
@@ -111,17 +110,14 @@ export default function MarketplacePage() {
         }
         
         try {
-            // Update points via API
             await axios.patch(`${API_URL}/profile/update_points/`, {
                 points_to_deduct: totalCost
             });
             
-            // Add items to owned items
             const newOwnedItems = [...ownedItems, ...cart.map(item => item.id)];
             setOwnedItems(newOwnedItems);
             localStorage.setItem("ownedItems", JSON.stringify(newOwnedItems));
             
-            // Refresh points from API
             await getProfile();
             setCart([]);
             alert("Purchase successful! You can now equip your items.");
@@ -157,7 +153,6 @@ export default function MarketplacePage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
             <div className="max-w-7xl mx-auto space-y-8">
-                {/* Header */}
                 <div className="flex justify-between items-center">
                     <h1 className="text-4xl font-bold text-white">Marketplace</h1>
                     <div className="flex items-center gap-4">
@@ -177,7 +172,6 @@ export default function MarketplacePage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Products Grid */}
                     <div className="lg:col-span-2">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-white">
@@ -322,7 +316,6 @@ export default function MarketplacePage() {
                         </div>
                     </div>
 
-                    {/* Cart Sidebar */}
                     <div className="lg:col-span-1">
                         <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 sticky top-8">
                             <h3 className="text-lg font-bold text-white mb-4">Cart ({cart.length})</h3>

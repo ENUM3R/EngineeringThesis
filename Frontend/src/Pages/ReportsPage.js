@@ -2,8 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import useReports from "../Hooks/useReports";
 
-
-// Simple bar chart component
 const SimpleBarChart = ({ data, dataKey1, dataKey2, color1, color2 }) => {
     const maxValue = Math.max(...data.map(d => (d[dataKey1] || 0) + (d[dataKey2] || 0)));
     
@@ -38,7 +36,6 @@ const SimpleBarChart = ({ data, dataKey1, dataKey2, color1, color2 }) => {
     );
 };
 
-// Simple line chart component
 const SimpleLineChart = ({ data, dataKey, color }) => {
     const maxValue = Math.max(...data.map(d => d[dataKey]));
     const minValue = Math.min(...data.map(d => d[dataKey]));
@@ -80,7 +77,6 @@ const SimpleLineChart = ({ data, dataKey, color }) => {
     );
 };
 
-// Simple pie chart component
 const SimplePieChart = ({ data }) => {
     const total = data.reduce((sum, item) => sum + item.value, 0);
     let currentAngle = 0;
@@ -128,7 +124,6 @@ export default function ReportsPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
             <div className="max-w-7xl mx-auto space-y-8">
-                {/* Header */}
                 <div>
                     <h1 className="text-4xl font-bold text-white mb-2">Reports & Statistics</h1>
                     <p className="text-slate-400">Track your performance across tasks, points, and achievements</p>
@@ -144,7 +139,6 @@ export default function ReportsPage() {
                     <div className="text-center py-20 text-slate-400">Loading statistics...</div>
                 ) : stats ? (
                     <>
-                        {/* Stats Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg">
                                 <p className="text-sm text-slate-400 mb-2">Total Tasks Completed</p>
@@ -163,7 +157,6 @@ export default function ReportsPage() {
                             </div>
                         </div>
 
-                        {/* Additional Stats */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg">
                                 <p className="text-sm text-slate-400 mb-2">Avg Task Duration</p>
@@ -195,9 +188,7 @@ export default function ReportsPage() {
                             </div>
                         </div>
 
-                        {/* Charts */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Tasks Completed Chart */}
                             <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg">
                                 <h2 className="text-lg font-semibold text-white mb-4">Tasks Completed This Week</h2>
                                 <SimpleBarChart
@@ -219,7 +210,6 @@ export default function ReportsPage() {
                                 </div>
                             </div>
 
-                            {/* Points Over Time */}
                             <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg">
                                 <h2 className="text-lg font-semibold text-white mb-4">Points Over 6 Weeks</h2>
                                 <SimpleLineChart
@@ -229,16 +219,12 @@ export default function ReportsPage() {
                                 />
                             </div>
                         </div>
-
-                        {/* Achievement Distribution */}
                         <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg">
                             <h2 className="text-lg font-semibold text-white mb-4">Achievement Distribution</h2>
                             <div className="flex justify-center">
                                 <SimplePieChart data={stats.achievements} />
                             </div>
                         </div>
-
-                        {/* Achievement Breakdown */}
                         <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg">
                             <h2 className="text-lg font-semibold text-white mb-4">Recent Achievements</h2>
                             <div className="space-y-3">

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Mock data - in a real app, this would come from an API
+// Mock data - this would come from an API
 const mockUsers = [
     { id: 1, rank: 1, name: "Alex Chen", points: 2850, currentMonth: 450, last3Months: 2100, avatar: "👨‍💻" },
     { id: 2, rank: 2, name: "Jordan Smith", points: 2620, currentMonth: 420, last3Months: 1950, avatar: "👩‍💼" },
@@ -13,7 +13,7 @@ const mockUsers = [
     { id: 8, rank: 8, name: "Casey Martinez", points: 1280, currentMonth: 220, last3Months: 1050, avatar: "👩‍🎭" },
 ];
 
-// Achievements - easily expandable
+// Achievements
 const achievements = [
     { id: 1, title: "Rising Star", description: "Reach 500 points", icon: "⭐", points: 50 },
     { id: 2, title: "Champion", description: "Reach 2000 points", icon: "🏆", points: 200 },
@@ -31,7 +31,7 @@ export default function RankingPage() {
     const navigate = useNavigate();
     const [selectedUser, setSelectedUser] = useState(null);
 
-    // Mock: Get achievements for a user (in real app, this would come from API)
+    // Mock: Get achievements for a user (this would come from API)
     const getUserAchievements = (userId) => {
         // Randomly assign some achievements for demo
         return achievements.filter((_, index) => index % 2 === userId % 2 || index < 3);
@@ -40,7 +40,6 @@ export default function RankingPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
             <div className="w-full max-w-6xl mx-auto space-y-8">
-                {/* Header */}
                 <div className="text-center mb-8">
                     <div className="flex items-center justify-center gap-3 mb-4">
                         <span className="text-4xl">🏆</span>
@@ -57,7 +56,6 @@ export default function RankingPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Leaderboard */}
                     <div className="lg:col-span-2">
                         <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl overflow-hidden">
                             <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
@@ -89,7 +87,6 @@ export default function RankingPage() {
                                                 {user.rank}
                                             </div>
 
-                                            {/* User Info */}
                                             <div className="flex-grow">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-2xl">{user.avatar}</span>
@@ -101,7 +98,6 @@ export default function RankingPage() {
                                                 </div>
                                             </div>
 
-                                            {/* Points */}
                                             <div className="text-right">
                                                 <p className="text-2xl font-bold text-blue-400">{user.points.toLocaleString()}</p>
                                                 <p className="text-xs text-slate-400">points</p>
@@ -113,7 +109,6 @@ export default function RankingPage() {
                         </div>
                     </div>
 
-                    {/* Achievements Sidebar */}
                     <div className="lg:col-span-1">
                         <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl p-6 sticky top-8">
                             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -141,7 +136,6 @@ export default function RankingPage() {
                     </div>
                 </div>
 
-                {/* Selected User Details */}
                 {selectedUser && (
                     <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl p-6">
                         <div className="mb-4">

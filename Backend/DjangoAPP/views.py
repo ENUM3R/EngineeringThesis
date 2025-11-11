@@ -17,16 +17,12 @@ class TaskViewSet(viewsets.ModelViewSet):
         
         user_request = Task.objects.filter(user=self.request.user)
 
-        # Auto-update overdue tasks
         now = timezone.now()
         overdue_tasks = user_request.filter(
             end_date__lt=now,
             status__in=["pending", "in progress"]
         )
         overdue_tasks.update(status="overdue")
-        
-        # Auto-mark abandoned tasks as done (but keep abandoned status)
-        # This is handled in the serializer/response, not in DB
 
         status_filter = self.request.query_params.get("status")
         if status_filter == "done":
@@ -45,31 +41,19 @@ class TaskViewSet(viewsets.ModelViewSet):
         from django.utils import timezone
         
         task = self.get_object()
-        
-        # Check original status before changing
-        is_abandoned = task.status == "abandoned"
-        
-        # Calculate points before changing status
+        is_abandoned: bool = task.status == "abandoned"    
         task.calculate_points()
-        
-        # Check if task is overdue (end_date has passed)
-        is_overdue = task.end_date and task.end_date < timezone.now()
-        
-        # If abandoned, give 0 points. If overdue, give half points. Otherwise full points.
-        points_to_add = 0
+        is_overdue: bool = task.end_date and task.end_date < timezone.now()
+    
+        points_to_add: int = 0
         if not is_abandoned:
             points_to_add = task.points
             if is_overdue:
                 points_to_add = task.points // 2
-            # Only change status to "done" if not abandoned
             task.status = "done"
-        # If abandoned, keep status as "abandoned" but treat as done for display
-        
-        task.save()  # Save the status change
+        task.save()
 
-        # Get or create profile
         profile, created = UserProfile.objects.get_or_create(user=task.user)
-        # Update both current_points (available) and total_points_earned (all-time)
         profile.current_points += points_to_add
         profile.total_points_earned += points_to_add
         profile.save()
@@ -97,10 +81,9 @@ class TaskViewSet(viewsets.ModelViewSet):
         }
         """
         task_data = request.data.copy()
-        frequency = task_data.pop('frequency', 'weekly')
-        occurrences_count = task_data.pop('occurrences_count', 12)
+        frequency: str = task_data.pop('frequency', 'weekly')
+        occurrences_count: int = task_data.pop('occurrences_count', 12)
         
-        # Validate occurrences_count
         occurrences_count = max(2, min(12, int(occurrences_count)))
         
         serializer = self.get_serializer(data=task_data)
@@ -205,12 +188,10 @@ class ProfileViewSet(viewsets.ViewSet):
             return Response({"error": "Points to deduct must be positive"}, status=status.HTTP_400_BAD_REQUEST)
         
         profile, created = UserProfile.objects.get_or_create(user=request.user)
-        # Check available points (current_points - points_spent)
-        available_points = profile.current_points - profile.points_spent
+        available_points: int = profile.current_points - profile.points_spent
         if available_points < points_to_deduct:
             return Response({"error": "Not enough points"}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Only track spending, don't decrease current_points
         profile.points_spent += points_to_deduct
         profile.save()
         serializer = UserProfileSerializer(profile)

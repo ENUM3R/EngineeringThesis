@@ -16,14 +16,12 @@ export default function useReports() {
     const calculateStats = async () => {
         setLoading(true);
         try {
-            // Fetch all tasks including done ones
             const allTasks = [...events, ...doneEvents];
             
             const now = new Date();
             const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
             
-            // Tasks by month
             const thisMonthTasks = allTasks.filter(task => {
                 const taskDate = new Date(task.end);
                 return taskDate >= currentMonth && task.status === "done";
@@ -34,26 +32,22 @@ export default function useReports() {
                 return taskDate >= threeMonthsAgo && task.status === "done";
             });
             
-            // Points earned
             const thisMonthPoints = thisMonthTasks.reduce((sum, task) => sum + (task.points || 0), 0);
             const last3MonthsPoints = last3MonthsTasks.reduce((sum, task) => sum + (task.points || 0), 0);
             const totalPoints = allTasks.filter(t => t.status === "done").reduce((sum, task) => sum + (task.points || 0), 0);
             
-            // Tasks by priority
             const tasksByPriority = {};
             allTasks.forEach(task => {
                 const priority = task.priority || 0;
                 tasksByPriority[priority] = (tasksByPriority[priority] || 0) + 1;
             });
             
-            // Tasks by status
             const tasksByStatus = {};
             allTasks.forEach(task => {
                 const status = task.status || "pending";
                 tasksByStatus[status] = (tasksByStatus[status] || 0) + 1;
             });
             
-            // Task durations
             const taskDurations = allTasks
                 .filter(task => task.start && task.end)
                 .map(task => {
@@ -66,7 +60,6 @@ export default function useReports() {
                 ? Math.round(taskDurations.reduce((a, b) => a + b, 0) / taskDurations.length)
                 : 0;
             
-            // Weekly task completion (last 7 days)
             const weekData = [];
             for (let i = 6; i >= 0; i--) {
                 const date = new Date();
@@ -87,7 +80,6 @@ export default function useReports() {
                 });
             }
             
-            // Points over time (last 6 weeks)
             const pointsData = [];
             for (let i = 5; i >= 0; i--) {
                 const weekStart = new Date();
@@ -107,7 +99,7 @@ export default function useReports() {
                 });
             }
             
-            // Achievements (mock for now - in real app would come from API)
+            // Achievements (mock for now - would come from API)
             const achievements = [
                 { name: "Gold", value: Math.floor(thisMonthTasks.length / 10), color: "#fbbf24" },
                 { name: "Silver", value: Math.floor(thisMonthTasks.length / 5), color: "#c7d2fe" },

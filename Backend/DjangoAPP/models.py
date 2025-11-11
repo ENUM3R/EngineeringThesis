@@ -37,14 +37,13 @@ class Task(models.Model):
         return 1
     
     def calculate_points(self) -> int:
-        # New formula: (end_date.day - start_date.day) * priority * 10
+        # points = (end_date.day - start_date.day) * priority * 10
         if self.start_date and self.end_date:
             day_diff = (self.end_date.date() - self.start_date.date()).days
             if day_diff <= 0:
-                day_diff = 1  # Minimum 1 day
+                day_diff = 1
             points: int = day_diff * self.priority * 10
         else:
-            # Fallback if dates are missing
             points: int = self.priority * 10
         self.points = int(points)
         self.save()

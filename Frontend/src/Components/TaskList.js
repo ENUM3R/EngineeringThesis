@@ -18,7 +18,6 @@ export default function TaskList({ mode: initialMode = "active", onClose }) {
     const [taskToEdit, setTaskToEdit] = useState(null);
     const [taskToDelete, setTaskToDelete] = useState(null);
 
-    // Filter out cyclic occurrences and subtasks - only show main tasks in list
     const mainTasksOnly = (currentMode === "done" ? doneEvents : events).filter(
         task => !task.is_cyclic_occurrence && !task.is_subtask
     );
@@ -39,7 +38,6 @@ export default function TaskList({ mode: initialMode = "active", onClose }) {
             await deleteTask(taskId);
             setShowDeleteTask(false);
             setTaskToDelete(null);
-            // Force refresh both active and done events
             await fetchEvents();
         } catch (error) {
             console.error("Error deleting task:", error);
@@ -49,17 +47,13 @@ export default function TaskList({ mode: initialMode = "active", onClose }) {
 
     const handleEdit = async (data, isCyclic, isSplit, shouldMarkDone) => {
         if (isCyclic) {
-            // Convert edit to cyclic task creation
             await createCyclicTask(data);
         } else if (isSplit) {
-            // Convert edit to split task creation
             await createSplitTask(data);
         } else {
             await editTask(data);
         }
-        
-        // If status is "done" or "abandoned", mark task as done to add points
-        // Abandoned tasks will give 0 points, done tasks will give full/half points
+
         if (shouldMarkDone && (data.status === "done" || data.status === "abandoned")) {
             try {
                 await markDone(data.task_id);
@@ -90,9 +84,8 @@ export default function TaskList({ mode: initialMode = "active", onClose }) {
         try {
             if (taskId) {
                 const response = await markDone(taskId);
-                await getProfile(); // Refresh points display
+                await getProfile();
                 await fetchEvents();
-                // Show success message with points awarded
                 if (response && response.points_awarded !== undefined) {
                     alert(`Task marked as done! Points awarded: ${response.points_awarded}`);
                 }
