@@ -110,6 +110,14 @@ export default function CalendarPage() {
                     >
                         📊 Reports
                     </button>
+                    <button
+                        onClick={() => {
+                            window.location.href = "/rankings";
+                        }}
+                        className="bg-purple-900 text-white px-3.5 py-1.5 rounded-md font-bold border-none cursor-pointer hover:bg-green-800 transition-colors"
+                    >
+                        ⭐ Rankings
+                    </button>
                 </div>
 
                 <div className="flex gap-2.5">

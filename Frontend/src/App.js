@@ -57,6 +57,14 @@ function App() {
                             </PrivateRoute>
                         }
                     />
+                    <Route
+                        path="/rankings"
+                        element={
+                            <PrivateRoute>
+                                <RankingPage/>
+                            </PrivateRoute>
+                        }
+                    />
                 </Routes>
             </Router>
         </UserPreferencesProvider>

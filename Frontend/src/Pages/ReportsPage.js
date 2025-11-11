@@ -1,78 +1,222 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useReports from "../Hooks/useReports";
 
-const SimpleBarChart = ({ data, dataKey1, dataKey2, color1, color2 }) => {
-    const maxValue = Math.max(...data.map(d => (d[dataKey1] || 0) + (d[dataKey2] || 0)));
+const SimpleBarChart = ({ data, dataKey1, dataKey2, color1, color2, xAxisLabel, yAxisLabel }) => {
+    const maxValue = Math.max(...data.map(d => Math.max((d[dataKey1] || 0), (d[dataKey2] || 0))), 1);
+    const yAxisTicks = 5;
+    const tickValues = [];
+    for (let i = 0; i <= yAxisTicks; i++) {
+        tickValues.push(Math.round((maxValue / yAxisTicks) * i));
+    }
     
     return (
-        <div className="h-[300px] flex items-end justify-between gap-2">
-            {data.map((item, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full flex flex-col-reverse gap-0.5 h-full">
-                        {item[dataKey1] > 0 && (
-                            <div
-                                className="w-full rounded-t"
-                                style={{
-                                    height: `${(item[dataKey1] / maxValue) * 100}%`,
-                                    backgroundColor: color1,
-                                }}
-                            />
-                        )}
-                        {item[dataKey2] > 0 && (
-                            <div
-                                className="w-full rounded-t"
-                                style={{
-                                    height: `${(item[dataKey2] / maxValue) * 100}%`,
-                                    backgroundColor: color2,
-                                }}
-                            />
-                        )}
-                    </div>
-                    <span className="text-xs text-slate-400">{item.name}</span>
+        <div className="w-full">
+            {yAxisLabel && (
+                <div className="text-center text-sm text-slate-400 mb-2">{yAxisLabel}</div>
+            )}
+            <div className="flex gap-4">
+                {/* Y-axis labels */}
+                <div className="flex flex-col justify-between text-xs text-slate-400 pb-6" style={{ minWidth: '40px' }}>
+                    {tickValues.reverse().map((value, idx) => (
+                        <span key={idx}>{value}</span>
+                    ))}
                 </div>
-            ))}
+                
+                <div className="flex-1">
+                    <div className="h-[250px] flex items-end justify-between gap-2 pb-6 relative">
+                        <div className="absolute inset-0 flex flex-col justify-between">
+                            {tickValues.map((_, idx) => (
+                                <div key={idx} className="border-t border-slate-700"></div>
+                            ))}
+                        </div>
+                        
+                        {data.map((item, index) => {
+                            const height1 = maxValue > 0 ? (item[dataKey1] || 0) / maxValue * 100 : 0;
+                            const height2 = maxValue > 0 ? (item[dataKey2] || 0) / maxValue * 100 : 0;
+                            
+                            return (
+                                <div key={index} className="flex-1 flex flex-col items-center gap-1 h-full relative z-10">
+                                    <div className="w-full h-full flex flex-col-reverse items-center justify-end gap-0.5">
+                                        {item[dataKey1] > 0 && (
+                                            <div
+                                                className="w-full rounded-t relative group"
+                                                style={{
+                                                    height: `${height1}%`,
+                                                    backgroundColor: color1,
+                                                    minHeight: height1 > 0 ? '2px' : '0',
+                                                }}
+                                                title={`${dataKey1}: ${item[dataKey1]}`}
+                                            >
+                                                {height1 > 10 && (
+                                                    <span className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs text-white whitespace-nowrap">
+                                                        {item[dataKey1]}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                        {item[dataKey2] > 0 && (
+                                            <div
+                                                className="w-full rounded-t relative group"
+                                                style={{
+                                                    height: `${height2}%`,
+                                                    backgroundColor: color2,
+                                                    minHeight: height2 > 0 ? '2px' : '0',
+                                                }}
+                                                title={`${dataKey2}: ${item[dataKey2]}`}
+                                            >
+                                                {height2 > 10 && (
+                                                    <span className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs text-white whitespace-nowrap">
+                                                        {item[dataKey2]}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-xs text-slate-400 mt-1">{item.name}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {xAxisLabel && (
+                        <div className="text-center text-sm text-slate-400 mt-2">{xAxisLabel}</div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
 
-const SimpleLineChart = ({ data, dataKey, color }) => {
-    const maxValue = Math.max(...data.map(d => d[dataKey]));
-    const minValue = Math.min(...data.map(d => d[dataKey]));
+const SimpleLineChart = ({ data, dataKey, color, xAxisLabel, yAxisLabel }) => {
+    const maxValue = Math.max(...data.map(d => d[dataKey] || 0));
+    const minValue = Math.min(...data.map(d => d[dataKey] || 0));
     const range = maxValue - minValue || 1;
+    const yAxisTicks = 5;
+    const tickValues = [];
+    for (let i = 0; i <= yAxisTicks; i++) {
+        tickValues.push(Math.round(minValue + (range / yAxisTicks) * i));
+    }
+    
+    const svgWidth = 800;
+    const svgHeight = 250;
+    const padding = { top: 40, right: 40, bottom: 60, left: 60 };
+    const chartWidth = svgWidth - padding.left - padding.right;
+    const chartHeight = svgHeight - padding.top - padding.bottom;
+    
+    const coords = data.map((item, index) => {
+        const x = padding.left + (index / Math.max(data.length - 1, 1)) * chartWidth;
+        const normalizedY = range > 0 ? (item[dataKey] - minValue) / range : 0.5;
+        const y = padding.top + (1 - normalizedY) * chartHeight;
+        return { x, y, value: item[dataKey], label: item.name };
+    });
+    
+    const points = coords.map(c => `${c.x},${c.y}`).join(' ');
     
     return (
-        <div className="h-[300px] relative">
-            <svg className="w-full h-full">
-                <polyline
-                    fill="none"
-                    stroke={color}
-                    strokeWidth="2"
-                    points={data.map((item, index) => {
-                        const x = (index / (data.length - 1)) * 100;
-                        const y = 100 - ((item[dataKey] - minValue) / range) * 80;
-                        return `${x}%,${y}%`;
-                    }).join(" ")}
-                />
-                {data.map((item, index) => {
-                    const x = (index / (data.length - 1)) * 100;
-                    const y = 100 - ((item[dataKey] - minValue) / range) * 80;
-                    return (
-                        <circle
-                            key={index}
-                            cx={`${x}%`}
-                            cy={`${y}%`}
-                            r="4"
-                            fill={color}
+        <div className="w-full">
+            {yAxisLabel && (
+                <div className="text-center text-sm text-slate-400 mb-2">{yAxisLabel}</div>
+            )}
+            <div className="flex gap-4">
+                <div className="flex flex-col justify-between text-xs text-slate-400" style={{ minWidth: '50px', height: `${svgHeight}px` }}>
+                    {tickValues.reverse().map((value, idx) => (
+                        <span key={idx}>{value}</span>
+                    ))}
+                </div>
+                
+                <div className="flex-1" style={{ height: `${svgHeight}px` }}>
+                    <svg 
+                        width="100%" 
+                        height="100%" 
+                        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                        preserveAspectRatio="xMidYMid meet"
+                        className="overflow-visible"
+                    >
+                        {tickValues.map((tickValue, idx) => {
+                            const y = padding.top + (idx / (tickValues.length - 1)) * chartHeight;
+                            return (
+                                <line
+                                    key={idx}
+                                    x1={padding.left}
+                                    y1={y}
+                                    x2={svgWidth - padding.right}
+                                    y2={y}
+                                    stroke="#475569"
+                                    strokeWidth="1"
+                                    opacity="0.3"
+                                />
+                            );
+                        })}
+                        
+                        <line
+                            x1={padding.left}
+                            y1={padding.top}
+                            x2={padding.left}
+                            y2={svgHeight - padding.bottom}
+                            stroke="#64748b"
+                            strokeWidth="2"
                         />
-                    );
-                })}
-            </svg>
-            <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-slate-400">
-                {data.map((item, index) => (
-                    <span key={index}>{item.name}</span>
-                ))}
+                        
+                        <line
+                            x1={padding.left}
+                            y1={svgHeight - padding.bottom}
+                            x2={svgWidth - padding.right}
+                            y2={svgHeight - padding.bottom}
+                            stroke="#64748b"
+                            strokeWidth="2"
+                        />
+                        
+                        <polyline
+                            fill="none"
+                            stroke={color}
+                            strokeWidth="3"
+                            points={points}
+                        />
+                        
+                        {coords.map((coord, index) => (
+                            <g key={index}>
+                                <circle
+                                    cx={coord.x}
+                                    cy={coord.y}
+                                    r="6"
+                                    fill={color}
+                                    stroke="#fff"
+                                    strokeWidth="2"
+                                />
+                                <text
+                                    x={coord.x}
+                                    y={coord.y - 15}
+                                    textAnchor="middle"
+                                    fill="#fff"
+                                    fontSize="12"
+                                    fontWeight="600"
+                                >
+                                    {coord.value}
+                                </text>
+                            </g>
+                        ))}
+                        
+                        {data.map((item, index) => {
+                            const x = padding.left + (index / Math.max(data.length - 1, 1)) * chartWidth;
+                            return (
+                                <text
+                                    key={index}
+                                    x={x}
+                                    y={svgHeight - padding.bottom + 25}
+                                    textAnchor="middle"
+                                    fill="#94a3b8"
+                                    fontSize="12"
+                                >
+                                    {item.name}
+                                </text>
+                            );
+                        })}
+                    </svg>
+                </div>
             </div>
+            {xAxisLabel && (
+                <div className="text-center text-sm text-slate-400 mt-2">{xAxisLabel}</div>
+            )}
         </div>
     );
 };
@@ -190,13 +334,15 @@ export default function ReportsPage() {
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg">
-                                <h2 className="text-lg font-semibold text-white mb-4">Tasks Completed This Week</h2>
+                                <h2 className="text-lg font-semibold text-white mb-6">Tasks Completed This Week</h2>
                                 <SimpleBarChart
                                     data={stats.weekData}
                                     dataKey1="completed"
                                     dataKey2="pending"
                                     color1="#3b82f6"
                                     color2="#6b7280"
+                                    xAxisLabel="Day of Week"
+                                    yAxisLabel="Number of Tasks"
                                 />
                                 <div className="flex gap-4 justify-center mt-4">
                                     <div className="flex items-center gap-2">
@@ -211,11 +357,13 @@ export default function ReportsPage() {
                             </div>
 
                             <div className="bg-slate-800 border border-slate-700 p-6 rounded-lg">
-                                <h2 className="text-lg font-semibold text-white mb-4">Points Over 6 Weeks</h2>
+                                <h2 className="text-lg font-semibold text-white mb-6">Points Over 6 Weeks</h2>
                                 <SimpleLineChart
                                     data={stats.pointsData}
                                     dataKey="points"
                                     color="#3b82f6"
+                                    xAxisLabel="Week"
+                                    yAxisLabel="Points Earned"
                                 />
                             </div>
                         </div>
@@ -259,11 +407,15 @@ SimpleBarChart.propTypes = {
     dataKey2: PropTypes.string.isRequired,
     color1: PropTypes.string.isRequired,
     color2: PropTypes.string.isRequired,
+    xAxisLabel: PropTypes.string,
+    yAxisLabel: PropTypes.string,
 };
 SimpleLineChart.propTypes = {
     data: PropTypes.arrayOf(PropTypes.object).isRequired,
     dataKey: PropTypes.string.isRequired,
     color: PropTypes.string.isRequired,
+    xAxisLabel: PropTypes.string,
+    yAxisLabel: PropTypes.string,
 };
 SimplePieChart.propTypes = {
     data: PropTypes.arrayOf(

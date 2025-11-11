@@ -26,7 +26,6 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         status_filter = self.request.query_params.get("status")
         if status_filter == "done":
-            # Include both "done" and "abandoned" tasks in done list
             user_request = user_request.filter(status__in=["done", "abandoned"])
         else:
             user_request = user_request.filter(status__in=["pending", "in progress", "overdue"])
@@ -196,3 +195,282 @@ class ProfileViewSet(viewsets.ViewSet):
         profile.save()
         serializer = UserProfileSerializer(profile)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'])
+    def rankings(self, request) -> Response:
+        """Get global leaderboard with user rankings"""
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        profiles = UserProfile.objects.select_related('user').all().order_by('-total_points_earned')
+        
+        now = timezone.now()
+        current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        three_months_ago = (current_month - timedelta(days=90)).replace(day=1)
+        
+        rankings = []
+        for rank, profile in enumerate(profiles, start=1):
+            this_month_tasks = Task.objects.filter(
+                user=profile.user,
+                status='done',
+                end_date__gte=current_month
+            )
+            current_month_points = sum(task.points for task in this_month_tasks)
+            
+            last_3_months_tasks = Task.objects.filter(
+                user=profile.user,
+                status='done',
+                end_date__gte=three_months_ago
+            )
+            last_3_months_points = sum(task.points for task in last_3_months_tasks)
+            
+            rankings.append({
+                'id': profile.user.id,
+                'rank': rank,
+                'name': profile.user.username,
+                'points': profile.total_points_earned,
+                'current_month': current_month_points,
+                'last3_months': last_3_months_points,
+                'avatar': self._get_avatar(profile.user.id)
+            })
+        
+        return Response(rankings, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'])
+    def achievements(self, request) -> Response:
+        """Get all available achievements"""
+        all_achievements = [
+            {'id': 1, 'title': 'Rising Star', 'description': 'Reach 500 points', 'icon': '⭐', 'points': 50},
+            {'id': 2, 'title': 'Champion', 'description': 'Reach 2000 points', 'icon': '🏆', 'points': 200},
+            {'id': 3, 'title': 'Speed Demon', 'description': 'Gain 100 points in one day', 'icon': '⚡', 'points': 100},
+            {'id': 4, 'title': 'Consistency King', 'description': 'Maintain 7-day streak', 'icon': '🔥', 'points': 150},
+            {'id': 5, 'title': 'Elite Member', 'description': 'Rank in top 10', 'icon': '💎', 'points': 300},
+            {'id': 6, 'title': 'Legendary', 'description': 'Reach 3000 points', 'icon': '👑', 'points': 500},
+            {'id': 7, 'title': 'Task Master', 'description': 'Complete 100 tasks', 'icon': '✅', 'points': 250},
+            {'id': 8, 'title': 'Early Bird', 'description': 'Complete 10 tasks before 9 AM', 'icon': '🌅', 'points': 75},
+            {'id': 9, 'title': 'Night Owl', 'description': 'Complete 10 tasks after 10 PM', 'icon': '🦉', 'points': 75},
+            {'id': 10, 'title': 'Weekend Warrior', 'description': 'Complete 20 tasks on weekends', 'icon': '🏋️', 'points': 120},
+        ]
+        return Response(all_achievements, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'])
+    def user_achievements(self, request) -> Response:
+        """Get achievements for the current user"""
+        from django.utils import timezone
+        from datetime import timedelta
+        from collections import defaultdict
+        
+        user = request.user
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        
+        all_tasks = Task.objects.filter(user=user, status='done')
+        total_tasks = all_tasks.count()
+        total_points = profile.total_points_earned
+        
+        earned_achievements = []
+        
+        # Rising Star - 500 points
+        if total_points >= 500:
+            earned_achievements.append({'id': 1, 'title': 'Rising Star', 'description': 'Reach 500 points', 'icon': '⭐', 'points': 50})
+        
+        # Champion - 2000 points
+        if total_points >= 2000:
+            earned_achievements.append({'id': 2, 'title': 'Champion', 'description': 'Reach 2000 points', 'icon': '🏆', 'points': 200})
+        
+        # Legendary - 3000 points
+        if total_points >= 3000:
+            earned_achievements.append({'id': 6, 'title': 'Legendary', 'description': 'Reach 3000 points', 'icon': '👑', 'points': 500})
+        
+        # Task Master - 100 tasks
+        if total_tasks >= 100:
+            earned_achievements.append({'id': 7, 'title': 'Task Master', 'description': 'Complete 100 tasks', 'icon': '✅', 'points': 250})
+        
+        # Speed Demon - 100 points in one day
+        now = timezone.now()
+        for task in all_tasks:
+            if task.points >= 100:
+                day_tasks = Task.objects.filter(
+                    user=user,
+                    status='done',
+                    end_date__date=task.end_date.date()
+                )
+                day_points = sum(t.points for t in day_tasks)
+                if day_points >= 100:
+                    earned_achievements.append({'id': 3, 'title': 'Speed Demon', 'description': 'Gain 100 points in one day', 'icon': '⚡', 'points': 100})
+                    break
+        
+        # Consistency King - 7-day streak
+        task_dates = sorted(set(task.end_date.date() for task in all_tasks if task.end_date))
+        if len(task_dates) >= 7:
+            current_streak = 0
+            max_streak = 0
+            prev_date = None
+            for date in task_dates:
+                if prev_date and (date - prev_date).days == 1:
+                    current_streak += 1
+                    max_streak = max(max_streak, current_streak)
+                else:
+                    current_streak = 1
+                prev_date = date
+            if max_streak >= 7:
+                earned_achievements.append({'id': 4, 'title': 'Consistency King', 'description': 'Maintain 7-day streak', 'icon': '🔥', 'points': 150})
+        
+        # Elite Member - Top 10 ranking
+        user_rank = UserProfile.objects.filter(total_points_earned__gt=profile.total_points_earned).count() + 1
+        if user_rank <= 10:
+            earned_achievements.append({'id': 5, 'title': 'Elite Member', 'description': 'Rank in top 10', 'icon': '💎', 'points': 300})
+        
+        # Early Bird - 10 tasks before 9 AM
+        early_tasks = [task for task in all_tasks if task.end_date and task.end_date.hour < 9]
+        if len(early_tasks) >= 10:
+            earned_achievements.append({'id': 8, 'title': 'Early Bird', 'description': 'Complete 10 tasks before 9 AM', 'icon': '🌅', 'points': 75})
+        
+        # Night Owl - 10 tasks after 10 PM
+        night_tasks = [task for task in all_tasks if task.end_date and task.end_date.hour >= 22]
+        if len(night_tasks) >= 10:
+            earned_achievements.append({'id': 9, 'title': 'Night Owl', 'description': 'Complete 10 tasks after 10 PM', 'icon': '🦉', 'points': 75})
+        
+        # Weekend Warrior - 20 tasks on weekends
+        weekend_tasks = [task for task in all_tasks if task.end_date and task.end_date.weekday() >= 5]
+        if len(weekend_tasks) >= 20:
+            earned_achievements.append({'id': 10, 'title': 'Weekend Warrior', 'description': 'Complete 20 tasks on weekends', 'icon': '🏋️', 'points': 120})
+        
+        seen = set()
+        unique_achievements = []
+        for ach in earned_achievements:
+            if ach['id'] not in seen:
+                seen.add(ach['id'])
+                unique_achievements.append(ach)
+        
+        return Response(unique_achievements, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['get'])
+    def user_stats(self, request, pk=None) -> Response:
+        """Get statistics for a specific user by user ID"""
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        try:
+            user = User.objects.get(id=pk)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        
+        now = timezone.now()
+        current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        three_months_ago = (current_month - timedelta(days=90)).replace(day=1)
+        
+        this_month_tasks = Task.objects.filter(
+            user=user,
+            status='done',
+            end_date__gte=current_month
+        )
+        current_month_points = sum(task.points for task in this_month_tasks)
+        
+        last_3_months_tasks = Task.objects.filter(
+            user=user,
+            status='done',
+            end_date__gte=three_months_ago
+        )
+        last_3_months_points = sum(task.points for task in last_3_months_tasks)
+        
+        all_tasks = Task.objects.filter(user=user, status='done')
+        earned_achievements = self._calculate_user_achievements(user, profile, all_tasks)
+        
+        return Response({
+            'user_id': user.id,
+            'username': user.username,
+            'total_points': profile.total_points_earned,
+            'current_month': current_month_points,
+            'last3_months': last_3_months_points,
+            'achievements': earned_achievements
+        }, status=status.HTTP_200_OK)
+    
+    def _calculate_user_achievements(self, user, profile, all_tasks):
+        """Helper method to calculate user achievements"""
+        from django.utils import timezone
+        from collections import defaultdict
+        
+        earned_achievements = []
+        total_tasks = all_tasks.count()
+        total_points = profile.total_points_earned
+        
+        # Rising Star - 500 points
+        if total_points >= 500:
+            earned_achievements.append({'id': 1, 'title': 'Rising Star', 'description': 'Reach 500 points', 'icon': '⭐', 'points': 50})
+        
+        # Champion - 2000 points
+        if total_points >= 2000:
+            earned_achievements.append({'id': 2, 'title': 'Champion', 'description': 'Reach 2000 points', 'icon': '🏆', 'points': 200})
+        
+        # Legendary - 3000 points
+        if total_points >= 3000:
+            earned_achievements.append({'id': 6, 'title': 'Legendary', 'description': 'Reach 3000 points', 'icon': '👑', 'points': 500})
+        
+        # Task Master - 100 tasks
+        if total_tasks >= 100:
+            earned_achievements.append({'id': 7, 'title': 'Task Master', 'description': 'Complete 100 tasks', 'icon': '✅', 'points': 250})
+        
+        # Speed Demon - 100 points in one day
+        for task in all_tasks:
+            if task.points >= 100:
+                day_tasks = Task.objects.filter(
+                    user=user,
+                    status='done',
+                    end_date__date=task.end_date.date()
+                )
+                day_points = sum(t.points for t in day_tasks)
+                if day_points >= 100:
+                    earned_achievements.append({'id': 3, 'title': 'Speed Demon', 'description': 'Gain 100 points in one day', 'icon': '⚡', 'points': 100})
+                    break
+        
+        # Consistency King - 7-day streak
+        task_dates = sorted(set(task.end_date.date() for task in all_tasks if task.end_date))
+        if len(task_dates) >= 7:
+            current_streak = 0
+            max_streak = 0
+            prev_date = None
+            for date in task_dates:
+                if prev_date and (date - prev_date).days == 1:
+                    current_streak += 1
+                    max_streak = max(max_streak, current_streak)
+                else:
+                    current_streak = 1
+                prev_date = date
+            if max_streak >= 7:
+                earned_achievements.append({'id': 4, 'title': 'Consistency King', 'description': 'Maintain 7-day streak', 'icon': '🔥', 'points': 150})
+        
+        # Elite Member - Top 10 ranking
+        user_rank = UserProfile.objects.filter(total_points_earned__gt=profile.total_points_earned).count() + 1
+        if user_rank <= 10:
+            earned_achievements.append({'id': 5, 'title': 'Elite Member', 'description': 'Rank in top 10', 'icon': '💎', 'points': 300})
+        
+        # Early Bird - 10 tasks before 9 AM
+        early_tasks = [task for task in all_tasks if task.end_date and task.end_date.hour < 9]
+        if len(early_tasks) >= 10:
+            earned_achievements.append({'id': 8, 'title': 'Early Bird', 'description': 'Complete 10 tasks before 9 AM', 'icon': '🌅', 'points': 75})
+        
+        # Night Owl - 10 tasks after 10 PM
+        night_tasks = [task for task in all_tasks if task.end_date and task.end_date.hour >= 22]
+        if len(night_tasks) >= 10:
+            earned_achievements.append({'id': 9, 'title': 'Night Owl', 'description': 'Complete 10 tasks after 10 PM', 'icon': '🦉', 'points': 75})
+        
+        # Weekend Warrior - 20 tasks on weekends
+        weekend_tasks = [task for task in all_tasks if task.end_date and task.end_date.weekday() >= 5]
+        if len(weekend_tasks) >= 20:
+            earned_achievements.append({'id': 10, 'title': 'Weekend Warrior', 'description': 'Complete 20 tasks on weekends', 'icon': '🏋️', 'points': 120})
+        
+        seen = set()
+        unique_achievements = []
+        for ach in earned_achievements:
+            if ach['id'] not in seen:
+                seen.add(ach['id'])
+                unique_achievements.append(ach)
+        
+        return unique_achievements
+    
+    def _get_avatar(self, user_id: int) -> str:
+        """Generate a simple avatar based on user ID"""
+        avatars = ['👨‍💻', '👩‍💼', '👨‍🎨', '👩‍🚀', '👨‍🏫', '👩‍⚕️', '👨‍🍳', '👩‍🎭', '👨‍🔬', '👩‍🎤']
+        return avatars[user_id % len(avatars)]
