@@ -30,21 +30,26 @@ export default function useTasks() {
                 finalStatus = "abandoned";
             }
             
+            const categoryIndicator = event.category === "work" ? "W" : event.category === "school" ? "S" : "P";
             const titleWithSubtask = (event.subtasks && event.subtasks.length > 0) 
                 ? `* ${event.title}` 
                 : event.title;
+            const titleWithCategory = `${categoryIndicator} - ${titleWithSubtask}`;
             
             const calculatedPoints = event.points || (Number(event.priority) || 0) * 1 * 1; // priority * hours * days (default)
             
             const mainEvent = {
                 task_id: event.id,
                 id: event.id,
-                title: titleWithSubtask,
+                title: titleWithCategory,
                 start: endDate,
                 end: endOfDay,
                 priority: Number(event.priority) || 0,
                 points: calculatedPoints,
                 status: finalStatus,
+                category: event.category || "private",
+                location: event.location || "",
+                reminder_date: event.reminder_date || null,
                 is_cyclic: event.is_cyclic || false,
                 frequency: event.cycle?.frequency || null,
                 subtasks: event.subtasks || [],
@@ -65,15 +70,19 @@ export default function useTasks() {
                     const occEndOfDay = new Date(occEndDate);
                     occEndOfDay.setHours(23, 59, 59, 999);
                     
+                    const cyclicCategoryIndicator = event.category === "work" ? "W" : event.category === "school" ? "S" : "P";
                     events.push({
                         task_id: event.id,
                         id: `${event.id}_cyclic_${index}`,
-                        title: `${event.title} (${frequency})`,
+                        title: `${cyclicCategoryIndicator} - ${event.title} (${frequency})`,
                         start: occEndDate,
                         end: occEndOfDay,
                         priority: Number(event.priority) || 0,
                         points: Number(event.points) || 0,
                         status: event.status,
+                        category: event.category || "private",
+                        location: event.location || "",
+                        reminder_date: event.reminder_date || null,
                         is_cyclic_occurrence: true,
                         parent_task_id: event.id,
                     });
@@ -87,15 +96,19 @@ export default function useTasks() {
                     const subtaskEndOfDay = new Date(subtaskEndDate);
                     subtaskEndOfDay.setHours(23, 59, 59, 999);
                     
+                    const subtaskCategoryIndicator = event.category === "work" ? "W" : event.category === "school" ? "S" : "P";
                     events.push({
                         task_id: event.id,
                         id: `subtask_${subtask.id}`,
-                        title: `→ ${subtask.title}`,
+                        title: `${subtaskCategoryIndicator} - → ${subtask.title}`,
                         start: subtaskEndDate,
                         end: subtaskEndOfDay,
                         priority: Number(subtask.priority) || 0,
                         points: 0,
                         status: subtask.status,
+                        category: event.category || "private",
+                        location: event.location || "",
+                        reminder_date: event.reminder_date || null,
                         is_subtask: true,
                         parent_task_id: event.id,
                     });

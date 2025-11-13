@@ -19,6 +19,13 @@ export default function AddTask({ onSubmit, onClose, defaultValues }) {
 
     const [start_time, setStartTime] = useState(defaultValues?.start_time || "");
     const [end_time, setEndTime] = useState(defaultValues?.end_time || "");
+    const [category, setCategory] = useState(defaultValues?.category || "private");
+    const [reminder_date, setReminderDate] = useState(
+        defaultValues?.reminder_date
+            ? new Date(defaultValues.reminder_date).toISOString().slice(0, 16)
+            : ""
+    );
+    const [location, setLocation] = useState(defaultValues?.location || "");
     const [isCyclic, setIsCyclic] = useState(defaultValues?.is_cyclic || false);
     const [frequency, setFrequency] = useState(defaultValues?.frequency || "weekly");
     const [occurrencesCount, setOccurrencesCount] = useState(defaultValues?.occurrences_count || 12);
@@ -36,8 +43,11 @@ export default function AddTask({ onSubmit, onClose, defaultValues }) {
             description,
             priority,
             status,
+            category,
             start_date: start_date ? new Date(start_date).toISOString() : null,
             end_date: end_date ? new Date(end_date).toISOString() : null,
+            reminder_date: reminder_date ? new Date(reminder_date).toISOString() : null,
+            location: location || "",
             start_time: start_time || null,
             end_time: end_time || null,
         };
@@ -136,6 +146,45 @@ export default function AddTask({ onSubmit, onClose, defaultValues }) {
                         required
                         className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
                     />
+                </div>
+
+                <div>
+                    <label className="text-white text-sm font-medium block mb-1">Category:</label>
+                    <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
+                    >
+                        <option value="work" className="bg-gray-700">Work</option>
+                        <option value="school" className="bg-gray-700">School/Studies</option>
+                        <option value="private" className="bg-gray-700">Private</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label className="text-white text-sm font-medium block mb-1">Location (Optional):</label>
+                    <input
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="Enter location"
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
+                    />
+                </div>
+
+                <div>
+                    <label className="text-white text-sm font-medium block mb-1">Reminder Date (Optional):</label>
+                    <input
+                        type="datetime-local"
+                        value={reminder_date}
+                        onChange={(e) => setReminderDate(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
+                    />
+                    {reminder_date && (
+                        <div className="text-xs text-gray-400 mt-1">
+                            You will receive a reminder on this date to finish the task before the end date.
+                        </div>
+                    )}
                 </div>
 
                 <div>

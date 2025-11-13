@@ -20,6 +20,7 @@ import TaskOptions from "./Components/TaskOptions";
 import TaskPicker from "./Components/TaskPicker";
 import TaskList from "./Components/TaskList";
 import { QuarterView } from "./Components/QuarterView";
+import ReminderNotification from "./Components/ReminderNotification";
 
 const locales = {
     "en-US": require("date-fns/locale/en-US"),
@@ -88,6 +89,7 @@ export default function CalendarPage() {
         <div
             className="calendar-container h-[600px] m-[50px] p-2.5 rounded-lg relative"
         >
+            <ReminderNotification />
 
             <div className="flex justify-between items-center mb-2.5 px-2.5">
                 <div className="flex gap-2.5 items-center">

@@ -2,10 +2,23 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 export default function EditTask({ task, onSubmit, onClose }) {
-    const [title, setTitle] = useState(task.title || '');
+    // Strip category indicator prefix (W - , S - , P - ) from title if present
+    const getCleanTitle = (title) => {
+        if (!title) return '';
+        return title.replace(/^[WSP]\s*-\s*/, '').replace(/^\*\s*/, '');
+    };
+    
+    const [title, setTitle] = useState(getCleanTitle(task.title || ''));
     const [description, setDescription] = useState(task.description || '');
     const [priority, setPriority] = useState(task.priority || 1);
     const [status, setStatus] = useState(task.status || 'pending');
+    const [category, setCategory] = useState(task.category || 'private');
+    const [location, setLocation] = useState(task.location || '');
+    const [reminder_date, setReminderDate] = useState(
+        task.reminder_date
+            ? new Date(task.reminder_date).toISOString().slice(0, 16)
+            : ""
+    );
     const [start_time, setStartTime] = useState(task.start_time || "");
     const [end_time, setEndTime] = useState(task.end_time || "");
     const [isCyclic, setIsCyclic] = useState(task.is_cyclic || false);
@@ -39,6 +52,9 @@ export default function EditTask({ task, onSubmit, onClose }) {
             priority: Number(priority),
             points: task.points || 0,
             status,
+            category,
+            location: location || "",
+            reminder_date: reminder_date ? new Date(reminder_date).toISOString() : null,
             start_date: formattedStart,
             end_date: formattedEnd,
             start_time: start_time || null,
@@ -135,6 +151,42 @@ export default function EditTask({ task, onSubmit, onClose }) {
                     <div className="text-xs text-gray-400 mt-1">
                         (Calculated: Priority × Hours × Days)
                     </div>
+                </div>
+                <div>
+                    <label className="text-white text-sm font-medium block mb-1">Category:</label>
+                    <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
+                    >
+                        <option value="work" className="bg-gray-700">Work</option>
+                        <option value="school" className="bg-gray-700">School/Studies</option>
+                        <option value="private" className="bg-gray-700">Private</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="text-white text-sm font-medium block mb-1">Location (Optional):</label>
+                    <input
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="Enter location"
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
+                    />
+                </div>
+                <div>
+                    <label className="text-white text-sm font-medium block mb-1">Reminder Date (Optional):</label>
+                    <input
+                        type="datetime-local"
+                        value={reminder_date}
+                        onChange={(e) => setReminderDate(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:border-blue-500"
+                    />
+                    {reminder_date && (
+                        <div className="text-xs text-gray-400 mt-1">
+                            You will receive a reminder on this date to finish the task before the end date.
+                        </div>
+                    )}
                 </div>
                 <div>
                     <label className="text-white text-sm font-medium block mb-1">Start Time (Optional):</label>
@@ -332,6 +384,9 @@ EditTask.propTypes = {
         priority: PropTypes.number,
         status: PropTypes.string,
         points: PropTypes.number,
+        category: PropTypes.string,
+        location: PropTypes.string,
+        reminder_date: PropTypes.string,
         start: PropTypes.string,
         end: PropTypes.string,
         start_time: PropTypes.string,

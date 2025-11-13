@@ -10,6 +10,12 @@ STATUS_CHOICES: list[tuple] = [
     ("abandoned", "Abandoned"),
 ]
 
+CATEGORY_CHOICES: list[tuple] = [
+    ("work", "Work"),
+    ("school", "School/Studies"),
+    ("private", "Private"),
+]
+
 class Task(models.Model):
     user: int = models.ForeignKey(User, null=True, default=None, on_delete=models.CASCADE, related_name="tasks")
     title: str = models.CharField(max_length=200)
@@ -19,6 +25,9 @@ class Task(models.Model):
     priority: int = models.IntegerField(default=0)
     points: int = models.IntegerField(default=0)
     status: str = models.CharField(max_length=50, blank=True, default="pending")
+    category: str = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="private", blank=True)
+    reminder_date: datetime = models.DateTimeField(null=True, blank=True)
+    location: str = models.CharField(max_length=200, blank=True)
 
     def __str__(self) -> str:
         return self.title
