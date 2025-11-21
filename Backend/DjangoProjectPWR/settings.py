@@ -28,7 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['taskero-app.onrender.com']
 
-CORS_ALLOW_ALL_ORIGINS = [
+CORS_ALLOWED_ORIGINS = [
     "https://taskero-app.vercel.app",
 ]
 
