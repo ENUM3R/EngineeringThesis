@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-)+xffdhm+8+toy-&_uekdh2b)&1s(74l1rg@jcjlel*=ggsldu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['taskero-app-url.onrender.com']
+ALLOWED_HOSTS = ['taskero-app.onrender.com']
 
 CORS_ALLOW_ALL_ORIGINS = [
     "https://taskero-app.vercel.app",
