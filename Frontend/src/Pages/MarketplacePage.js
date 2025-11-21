@@ -3,8 +3,9 @@ import { useAuth } from "../Hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useUserPreferences } from "../Context/UserPreferencesContext";
 import axios from "axios";
+import { api } from "../config/api";
 
-const API_URL = "http://127.0.0.1:8000/api";
+const UPDATE_POINTS_ENDPOINT = "/profile/update_points/";
 
 export default function MarketplacePage() {
     const { points, totalPointsEarned, availablePoints, getProfile } = useAuth();
@@ -110,7 +111,7 @@ export default function MarketplacePage() {
         }
         
         try {
-            await axios.patch(`${API_URL}/profile/update_points/`, {
+            await axios.patch(api(UPDATE_POINTS_ENDPOINT), {
                 points_to_deduct: totalCost
             });
             

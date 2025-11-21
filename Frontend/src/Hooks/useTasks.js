@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { api } from "../config/api";
 
-const API_URL = "http://127.0.0.1:8000/api/tasks/";
+const TASKS_ENDPOINT = "/tasks/";
+const TASKS_URL = api(TASKS_ENDPOINT);
 
 export default function useTasks() {
     const [events, setEvents] = useState([]);
@@ -151,7 +153,7 @@ export default function useTasks() {
 
     const fetchEvents = async () => {
         try {
-            const res = await axios.get(API_URL, authHeader());
+            const res = await axios.get(TASKS_URL, authHeader());
             const all = formatTasks(res.data);
             setEvents(all.filter(t => 
                 t.status !== "done" && 
@@ -160,7 +162,7 @@ export default function useTasks() {
                 !t.is_subtask
             ));
             
-            const doneRes = await axios.get(`${API_URL}?status=done`, authHeader());
+            const doneRes = await axios.get(`${TASKS_URL}?status=done`, authHeader());
             const doneAll = formatTasks(doneRes.data);
             setDoneEvents(doneAll.filter(t => 
                 (t.status === "done" || t.status === "abandoned") &&
@@ -174,7 +176,7 @@ export default function useTasks() {
 
     const addTask = async (taskData) => {
         try {
-            await axios.post(API_URL, taskData, authHeader());
+            await axios.post(TASKS_URL, taskData, authHeader());
             await fetchEvents();
         } catch (err) {
             console.error("Error adding task:", err.response?.data || err);
@@ -183,7 +185,7 @@ export default function useTasks() {
 
     const deleteTask = async (id) => {
         try {
-            await axios.delete(`${API_URL}${id}/`, authHeader());
+            await axios.delete(`${TASKS_URL}${id}/`, authHeader());
             await fetchEvents();
         } catch (err) {
             console.error("Error deleting task:", err);
@@ -192,7 +194,7 @@ export default function useTasks() {
 
     const editTask = async (updatedTask) => {
         try {
-            await axios.put(`${API_URL}${updatedTask.task_id}/`, updatedTask, authHeader());
+            await axios.put(`${TASKS_URL}${updatedTask.task_id}/`, updatedTask, authHeader());
             await fetchEvents();
         } catch (err) {
             console.error("Error editing task:", err.response?.data || err);
@@ -201,7 +203,7 @@ export default function useTasks() {
 
     const markDone = async (taskId) => {
         try {
-            const response = await axios.post(`${API_URL}${taskId}/mark_done/`, {}, authHeader());
+            const response = await axios.post(`${TASKS_URL}${taskId}/mark_done/`, {}, authHeader());
             await fetchEvents();
             return response.data;
         } catch (err) {
@@ -211,7 +213,7 @@ export default function useTasks() {
     };
     const createCyclicTask = async (taskData) => {
         try {
-            await axios.post(`${API_URL}create_cyclic/`, taskData, authHeader());
+            await axios.post(`${TASKS_URL}create_cyclic/`, taskData, authHeader());
             await fetchEvents();
         } catch (err) {
             console.error("Error creating cyclic task:", err.response?.data || err);
@@ -219,7 +221,7 @@ export default function useTasks() {
     };
     const createSplitTask = async (taskData) => {
         try {
-            await axios.post(`${API_URL}create_split/`, taskData, authHeader());
+            await axios.post(`${TASKS_URL}create_split/`, taskData, authHeader());
             await fetchEvents();
         } catch (err) {
             console.error("Error creating split task:", err.response?.data || err);

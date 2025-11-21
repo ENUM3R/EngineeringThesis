@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
+import { api } from "../config/api";
 
-const API_URL = "http://127.0.0.1:8000/api/tasks/";
+const TASKS_URL = api("/tasks/");
 
 export default function ReminderNotification() {
     const [reminders, setReminders] = useState([]);
@@ -21,7 +22,7 @@ export default function ReminderNotification() {
 
         const checkReminders = async () => {
             try {
-                const res = await axios.get(API_URL, authHeader());
+                const res = await axios.get(TASKS_URL, authHeader());
                 const now = new Date();
                 const activeReminders = res.data.filter((task) => {
                     if (!task.reminder_date) return false;

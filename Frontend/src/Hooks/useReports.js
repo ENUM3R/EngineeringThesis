@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import useTasks from "./useTasks";
-
-const API_URL = "http://127.0.0.1:8000/api/tasks/";
 
 export default function useReports() {
     const { events, doneEvents, fetchEvents } = useTasks();

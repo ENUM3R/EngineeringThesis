@@ -1,7 +1,6 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
-
-const API_URL = "http://127.0.0.1:8000/api";
+import { api } from "../config/api";
 
 export function useAuth() {
     const [points, setPoints] = useState(0);
@@ -10,7 +9,7 @@ export function useAuth() {
 
     const getProfile = async () => {
         try {
-            const res = await axios.get(`${API_URL}/profile/me/`);
+            const res = await axios.get(api("/profile/me/"));
             setPoints(res.data.current_points || 0);
             setTotalPointsEarned(res.data.total_points_earned || 0);
             setPointsSpent(res.data.points_spent || 0);
@@ -20,7 +19,7 @@ export function useAuth() {
     };
 
     const login = async (username, password) => {
-        const response = await axios.post(`${API_URL}/token/`, { username, password });
+        const response = await axios.post(api("/token/"), { username, password });
         localStorage.setItem("access", response.data.access);
         localStorage.setItem("refresh", response.data.refresh);
 
@@ -42,13 +41,13 @@ export function useAuth() {
         const refresh = localStorage.getItem("refresh");
         if (!refresh) throw new Error("No refresh token");
 
-        const response = await axios.post(`${API_URL}/token/refresh/`, { refresh });
+        const response = await axios.post(api("/token/refresh/"), { refresh });
         localStorage.setItem("access", response.data.access);
         return response.data.access;
     };
 
     const register = async (username, email, password) => {
-        await axios.post(`${API_URL}/register/`, { username, email, password });
+        await axios.post(api("/register/"), { username, email, password });
         await login(username, password);
     };
 

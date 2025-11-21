@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { api } from "../config/api";
 
-const API_URL = "http://127.0.0.1:8000/api";
+const RANKINGS_ENDPOINT = "/profile/rankings/";
+const ACHIEVEMENTS_ENDPOINT = "/profile/achievements/";
+const userStatsEndpoint = (userId) => `/profile/${userId}/user_stats/`;
 
 export default function useRankings() {
     const [rankings, setRankings] = useState([]);
@@ -17,7 +20,7 @@ export default function useRankings() {
 
     const fetchRankings = async () => {
         try {
-            const response = await axios.get(`${API_URL}/profile/rankings/`, authHeader());
+            const response = await axios.get(api(RANKINGS_ENDPOINT), authHeader());
             setRankings(response.data);
         } catch (err) {
             console.error("Error fetching rankings:", err);
@@ -27,7 +30,7 @@ export default function useRankings() {
 
     const fetchAchievements = async () => {
         try {
-            const response = await axios.get(`${API_URL}/profile/achievements/`, authHeader());
+            const response = await axios.get(api(ACHIEVEMENTS_ENDPOINT), authHeader());
             setAchievements(response.data);
         } catch (err) {
             console.error("Error fetching achievements:", err);
@@ -37,7 +40,7 @@ export default function useRankings() {
 
     const fetchUserAchievements = async (userId) => {
         try {
-            const response = await axios.get(`${API_URL}/profile/${userId}/user_stats/`, authHeader());
+            const response = await axios.get(api(userStatsEndpoint(userId)), authHeader());
             return response.data.achievements || [];
         } catch (err) {
             console.error("Error fetching user achievements:", err);
@@ -47,7 +50,7 @@ export default function useRankings() {
 
     const fetchUserStats = async (userId) => {
         try {
-            const response = await axios.get(`${API_URL}/profile/${userId}/user_stats/`, authHeader());
+            const response = await axios.get(api(userStatsEndpoint(userId)), authHeader());
             return response.data;
         } catch (err) {
             console.error("Error fetching user stats:", err);
