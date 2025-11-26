@@ -1,8 +1,8 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.utils import timezone
-from datetime import datetime, timedelta
-from .models import Task, UserProfile, CyclicTask, SubTask
+from datetime import timedelta
+from .models import Task, UserProfile
 from .serializers import TaskSerializer
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -11,10 +11,10 @@ import json
 class TaskModelTestCase(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='testpass123')
-        self.profile = UserProfile.objects.create(user=self.user, current_points=0)
+        # FIX: UserProfile is auto-created via signal
+        self.profile = UserProfile.objects.get(user=self.user)
 
     def test_task_creation_with_category(self):
-        """Test creating a task with category field"""
         task = Task.objects.create(
             user=self.user,
             title="Test Task",
@@ -26,7 +26,6 @@ class TaskModelTestCase(TestCase):
         self.assertEqual(task.title, "Test Task")
 
     def test_task_creation_with_location(self):
-        """Test creating a task with location field"""
         task = Task.objects.create(
             user=self.user,
             title="Test Task",
@@ -37,7 +36,6 @@ class TaskModelTestCase(TestCase):
         self.assertEqual(task.location, "Office Building")
 
     def test_task_creation_with_reminder_date(self):
-        """Test creating a task with reminder_date field"""
         reminder_date = timezone.now() + timedelta(days=1)
         task = Task.objects.create(
             user=self.user,
@@ -49,7 +47,6 @@ class TaskModelTestCase(TestCase):
         self.assertEqual(task.reminder_date, reminder_date)
 
     def test_task_default_category(self):
-        """Test that task has default category 'private'"""
         task = Task.objects.create(
             user=self.user,
             title="Test Task",
@@ -59,7 +56,6 @@ class TaskModelTestCase(TestCase):
         self.assertEqual(task.category, "private")
 
     def test_task_category_choices(self):
-        """Test that category field accepts valid choices"""
         valid_categories = ["work", "school", "private"]
         for category in valid_categories:
             task = Task.objects.create(
@@ -72,7 +68,6 @@ class TaskModelTestCase(TestCase):
             self.assertEqual(task.category, category)
 
     def test_task_calculate_points(self):
-        """Test task points calculation"""
         start_date = timezone.now()
         end_date = start_date + timedelta(days=5)
         task = Task.objects.create(
@@ -84,12 +79,10 @@ class TaskModelTestCase(TestCase):
             status="pending"
         )
         points = task.calculate_points()
-        # Expected: 5 (priority) * 5 (days) * 10 = 250
         self.assertEqual(points, 250)
         self.assertEqual(task.points, 250)
 
     def test_task_with_all_new_fields(self):
-        """Test creating a task with all new fields"""
         reminder_date = timezone.now() + timedelta(days=1)
         start_date = timezone.now()
         end_date = start_date + timedelta(days=3)
@@ -118,7 +111,6 @@ class TaskSerializerTestCase(TestCase):
         self.user = User.objects.create_user(username='testuser', password='testpass123')
 
     def test_task_serializer_includes_new_fields(self):
-        """Test that TaskSerializer includes category, location, and reminder_date"""
         reminder_date = timezone.now() + timedelta(days=1)
         task = Task.objects.create(
             user=self.user,
@@ -141,7 +133,6 @@ class TaskSerializerTestCase(TestCase):
         self.assertIsNotNone(data['reminder_date'])
 
     def test_task_serializer_creates_with_new_fields(self):
-        """Test creating a task via serializer with new fields"""
         reminder_date = timezone.now() + timedelta(days=1)
         task_data = {
             'title': 'New Task',
@@ -168,7 +159,6 @@ class TaskViewSetTestCase(TestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_create_task_with_category(self):
-        """Test creating a task via API with category"""
         task_data = {
             'title': 'API Test Task',
             'category': 'work',
@@ -181,7 +171,6 @@ class TaskViewSetTestCase(TestCase):
         self.assertEqual(response.data['category'], 'work')
 
     def test_create_task_with_location(self):
-        """Test creating a task via API with location"""
         task_data = {
             'title': 'API Test Task',
             'location': 'Conference Room',
@@ -194,7 +183,6 @@ class TaskViewSetTestCase(TestCase):
         self.assertEqual(response.data['location'], 'Conference Room')
 
     def test_create_task_with_reminder_date(self):
-        """Test creating a task via API with reminder_date"""
         reminder_date = timezone.now() + timedelta(days=2)
         task_data = {
             'title': 'API Test Task',
@@ -208,7 +196,6 @@ class TaskViewSetTestCase(TestCase):
         self.assertIsNotNone(response.data['reminder_date'])
 
     def test_create_task_with_all_new_fields(self):
-        """Test creating a task via API with all new fields"""
         reminder_date = timezone.now() + timedelta(days=1)
         task_data = {
             'title': 'Complete Project',
@@ -227,7 +214,6 @@ class TaskViewSetTestCase(TestCase):
         self.assertIsNotNone(response.data['reminder_date'])
 
     def test_update_task_category(self):
-        """Test updating a task's category via API"""
         task = Task.objects.create(
             user=self.user,
             title="Test Task",
@@ -251,13 +237,12 @@ class TaskViewSetTestCase(TestCase):
         self.assertEqual(task.category, 'work')
 
     def test_update_task_location(self):
-        """Test updating a task's location via API"""
         task = Task.objects.create(
             user=self.user,
             title="Test Task",
             location="Old Location",
             priority=5,
-            status="pending"
+           status="pending"
         )
         
         update_data = {
@@ -275,7 +260,6 @@ class TaskViewSetTestCase(TestCase):
         self.assertEqual(task.location, 'New Location')
 
     def test_get_task_list_includes_new_fields(self):
-        """Test that task list API includes new fields"""
         Task.objects.create(
             user=self.user,
             title="Test Task 1",
@@ -304,7 +288,6 @@ class TaskViewSetTestCase(TestCase):
             self.assertIn('reminder_date', task)
 
     def test_mark_done_with_new_fields(self):
-        """Test marking a task as done preserves new fields"""
         reminder_date = timezone.now() + timedelta(days=1)
         start_date = timezone.now()
         end_date = start_date + timedelta(days=2)
@@ -336,7 +319,6 @@ class TaskCategoryTestCase(TestCase):
         self.user = User.objects.create_user(username='testuser', password='testpass123')
 
     def test_category_work(self):
-        """Test work category"""
         task = Task.objects.create(
             user=self.user,
             title="Work Task",
@@ -347,7 +329,6 @@ class TaskCategoryTestCase(TestCase):
         self.assertEqual(task.category, "work")
 
     def test_category_school(self):
-        """Test school category"""
         task = Task.objects.create(
             user=self.user,
             title="School Task",
@@ -358,7 +339,6 @@ class TaskCategoryTestCase(TestCase):
         self.assertEqual(task.category, "school")
 
     def test_category_private(self):
-        """Test private category"""
         task = Task.objects.create(
             user=self.user,
             title="Private Task",
@@ -374,7 +354,6 @@ class TaskReminderTestCase(TestCase):
         self.user = User.objects.create_user(username='testuser', password='testpass123')
 
     def test_reminder_date_in_past(self):
-        """Test reminder date in the past"""
         reminder_date = timezone.now() - timedelta(days=1)
         task = Task.objects.create(
             user=self.user,
@@ -387,7 +366,6 @@ class TaskReminderTestCase(TestCase):
         self.assertLess(task.reminder_date, timezone.now())
 
     def test_reminder_date_in_future(self):
-        """Test reminder date in the future"""
         reminder_date = timezone.now() + timedelta(days=5)
         task = Task.objects.create(
             user=self.user,
@@ -400,7 +378,6 @@ class TaskReminderTestCase(TestCase):
         self.assertGreater(task.reminder_date, timezone.now())
 
     def test_reminder_date_optional(self):
-        """Test that reminder_date is optional"""
         task = Task.objects.create(
             user=self.user,
             title="No Reminder Task",
